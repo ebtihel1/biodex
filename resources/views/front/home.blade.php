@@ -110,15 +110,7 @@
                 </div>
             </div>
 
-            <div class="col-md-4 mb-4">
-                <div class="card h-100 p-4">
-                    <i class="bi bi-bag-heart text-success display-5 mb-3"></i>
-                    <h5 class="fw-bold text-success">Eco Products</h5>
-                    <p class="text-muted">Discover beautiful, useful, and affordable recycled products.</p>
-                         <a href="{{ url('/register') }}" class="btn btn-success">Join Now</a>
-
-                </div>
-            </div>
+          
 
             <div class="col-md-4 mb-4">
                 <div class="card h-100 p-4">

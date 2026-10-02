@@ -299,10 +299,9 @@
     <!-- Identical navigation bar -->
     <nav class="navbar navbar-expand-lg">
         <div class="container">
-            <a class="navbar-brand" href="{{ url('/') }}">
-                <i class="bi bi-recycle me-2"></i>
-                Biodex
-            </a>
+           <a class="navbar-brand d-flex align-items-center bg-white rounded-3 px-2 py-1" href="{{ url('/') }}">
+    <img src="{{ asset('images/biodex-logo.png') }}" alt="Biodex" height="32">
+</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>

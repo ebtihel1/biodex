@@ -78,6 +78,11 @@ Route::middleware(['auth'])->group(function () {
         $user = Auth::user();
         return view('front.profil.profile', compact('user'));
     })->name('profile.view');
+
+    Route::get('/back/profile', function () {
+        $user = Auth::user();
+        return view('back.profile', compact('user'));
+    })->name('back.profile');
 });
 
     //Waste Routes
@@ -304,6 +309,7 @@ Route::get('/dashboard', function() {
 
 
 Route::view('/recycling', 'front.recycling');
+Route::view('/about', 'front.about');
 Route::view('/contact', 'front.contact');
 
 Route::get('/dashbored/collectionpoints', action: [CollectionPointController::class, 'index'])->name('back.home');

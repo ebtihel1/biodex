@@ -163,10 +163,13 @@
     <div class="d-flex">
         <!-- Sidebar -->
         <div class="sidebar p-3" id="sidebar">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h4 class="text-white mb-0 nav-text">🌿 Biodex</h4>
+            <div class="d-flex align-items-center justify-content-between mb-4 px-1">
+                <div class="d-flex align-items-center gap-2">
+                    <img src="{{ asset('images/biodex-logo.png') }}" alt="Biodex" style="height: 36px; width: auto; max-width: 120px; object-fit: contain; border-radius: 8px; background: rgba(255,255,255,0.08); padding: 4px;">
+                </div>
                 <button class="btn btn-sm btn-light toggle-btn" id="toggleSidebar" aria-label="Toggle sidebar"><i class="bi bi-list"></i></button>
             </div>
+
             <ul class="nav flex-column" role="navigation">
                 <li class="nav-item mb-2">
                     <a href="{{ url('back/home') }}" class="nav-link" data-tooltip="Dashboard" aria-label="Dashboard"><i class="bi bi-speedometer2 me-2"></i> <span class="nav-text">Dashboard</span></a>
@@ -281,8 +284,9 @@
                 <h5 class="mb-0">Dashboard</h5>
                 <div class="d-flex align-items-center">
                     <input type="text" class="form-control form-control-sm me-2" placeholder="Search..." aria-label="Search">
-                    <i class="bi bi-bell fs-4 me-3" aria-label="Notifications"></i>
-                    <i class="bi bi-person-circle fs-4" aria-label="User Profile"></i>
+                    <a href="{{ route('back.profile') }}" class="d-inline-flex align-items-center justify-content-center text-decoration-none text-dark" aria-label="User Profile" title="Profile">
+                        <i class="bi bi-person-circle fs-4"></i>
+                    </a>
                 </div>
             </div>
 

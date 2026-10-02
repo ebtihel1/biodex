@@ -1,531 +1,292 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connexion - Biodex</title>
+    <title>Sign in - Biodex</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* === GLOBAL RESET === */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
+        :root {
+            --forest: #0f2f24;
+            --leaf: #1f6b44;
+            --leaf-dark: #17533a;
+            --lime: #d6ec8d;
+            --ink: #14291f;
+            --muted: #5d6f64;
+            --line: #d9e2d4;
+            --paper: #f6f8f2;
+            --field: #ffffff;
+            --error: #b42318;
+            --serif: 'Fraunces', Georgia, 'Times New Roman', serif;
+            --sans: 'Instrument Sans', 'Avenir Next', 'Segoe UI', sans-serif;
         }
 
-        body {
-            min-height: 100vh;
-            background: linear-gradient(135deg, #e8f5e9, #f1f8e9);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* === CARD === */
-        .login-container {
-            background: #fff;
-            padding: 3rem 2.5rem;
-            border-radius: 20px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 400px;
-            transition: transform 0.3s ease;
-        }
-
-        .login-container:hover {
-            transform: translateY(-5px);
-        }
-
-        /* === HEADER === */
-        .login-header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        .login-header h2 {
-            color: #2e7d32;
-            font-size: 2rem;
-            font-weight: 600;
-        }
-
-        .login-header p {
-            color: #666;
-            font-size: 0.9rem;
-        }
-
-        /* === FORM === */
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 1.2rem;
-        }
-
-        label {
-            font-weight: 500;
-            color: #2e7d32;
-        }
-
-        .input-group {
-            position: relative;
-        }
-
-        input {
-            width: 100%;
-            padding: 0.9rem 1rem;
-            border: 2px solid #c8e6c9;
-            border-radius: 10px;
-            transition: 0.3s;
-            font-size: 0.95rem;
-        }
-
-        input:focus {
-            border-color: #43a047;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(67, 160, 71, 0.2);
-        }
-
-        .toggle-password {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 1rem;
-            color: #2e7d32;
-            transition: 0.3s;
-        }
-
-        .toggle-password:hover {
-            color: #1b5e20;
-        }
-
-        button[type="submit"] {
-            padding: 0.9rem;
-            border: none;
-            border-radius: 10px;
-            background-color: #43a047;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        button[type="submit"]:hover {
-            background-color: #2e7d32;
-            transform: scale(1.03);
-        }
-
-        /* === LINK === */
-        .register-link {
-            text-align: center;
-            margin-top: 1rem;
-        }
-
-        .register-link a {
-            text-decoration: none;
-            color: #2e7d32;
-            font-weight: 500;
-            transition: 0.3s;
-        }
-
-        .register-link a:hover {
-            text-decoration: underline;
-            color: #1b5e20;
-        }
-
-        /* === GOOGLE BUTTON === */
-        .google-login {
-            margin-top: 1rem;
-            text-align: center;
-        }
-
-        .google-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            width: 100%;
-            padding: 0.9rem;
-            border: 2px solid #db4437;
-            border-radius: 10px;
-            background-color: #fff;
-            color: #db4437;
-            font-weight: 600;
-            text-decoration: none;
-            transition: 0.3s;
-            cursor: pointer;
-        }
-
-        .google-btn:hover {
-            background-color: #db4437;
-            color: white;
-            transform: scale(1.03);
-        }
-
-        .google-icon {
-            font-size: 1.2rem;
-            width: 18px;
-            height: 18px;
-            flex-shrink: 0;
-        }
-
-        .divider {
-            margin: 1.5rem 0;
-            text-align: center;
-            position: relative;
-            color: #666;
-            font-size: 0.9rem;
-        }
-
-        .divider::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background-color: #c8e6c9;
-        }
-
-        .divider span {
-            background-color: #fff;
-            padding: 0 1rem;
-        }
-
-        /* === RESPONSIVE === */
-        @media (max-width: 480px) {
-            .login-container {
-                padding: 2rem 1.5rem;
-            }
-
-            .login-header h2 {
-                font-size: 1.6rem;
-            }
-        }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             display: grid;
-            grid-template-columns: minmax(0, 1.04fr) minmax(420px, 0.96fr);
-            align-items: stretch;
-            justify-content: stretch;
-            background: #f7f9f3;
-            font-family: 'Instrument Sans', 'Avenir Next', sans-serif;
+            grid-template-columns: minmax(0, 1.05fr) minmax(440px, 0.95fr);
+            min-height: 100vh;
+            background: var(--paper);
+            color: var(--ink);
+            font-family: var(--sans);
+            -webkit-font-smoothing: antialiased;
         }
 
+        :focus-visible { outline: 3px solid rgba(31, 107, 68, 0.45); outline-offset: 2px; }
+
+        /* ===== STORY PANEL ===== */
         .login-story {
             position: relative;
             isolation: isolate;
             display: flex;
-            min-height: 100vh;
             flex-direction: column;
             justify-content: space-between;
+            min-height: 100vh;
+            padding: 44px 56px 52px;
             overflow: hidden;
-            padding: 44px 52px 48px;
             color: #fff;
-            background: #153d30;
+            background: linear-gradient(160deg, #1a5a3c, var(--forest));
         }
 
         .login-story::after {
-            position: absolute;
-            z-index: -1;
-            inset: 0;
-            background: linear-gradient(180deg, rgba(8, 33, 25, 0.3), rgba(8, 33, 25, 0.84));
             content: '';
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background: linear-gradient(180deg, rgba(10, 36, 27, 0.35) 0%, rgba(10, 36, 27, 0.55) 40%, rgba(10, 36, 27, 0.92) 100%);
         }
 
         .login-story-image {
             position: absolute;
-            z-index: -2;
             inset: 0;
+            z-index: -2;
             width: 100%;
             height: 100%;
             object-fit: cover;
-            object-position: center;
         }
+
+
 
         .login-brand {
             display: inline-flex;
             width: fit-content;
-            align-items: center;
-            gap: 12px;
-            color: #fff;
-            font-size: 19px;
-            font-weight: 700;
-            text-decoration: none;
+            padding: 12px 18px;
+            border-radius: 14px;
+            background: #fff;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
         }
 
-        .login-brand-mark {
-            display: grid;
-            width: 42px;
-            height: 42px;
-            place-items: center;
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            border-radius: 12px;
-            color: #17352a;
-            background: #d6ec8d;
-            font-family: Georgia, serif;
-            font-size: 22px;
-        }
+        .login-brand img { display: block; width: 168px; height: auto; }
 
-        .login-story-copy {
-            max-width: 600px;
-            margin-top: auto;
-            padding-top: 100px;
-        }
-
-        .login-story-eyebrow {
-            margin: 0 0 20px;
-            color: #d6ec8d;
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 0.14em;
-            text-transform: uppercase;
-        }
+        .login-story-copy { max-width: 560px; margin-top: auto; padding-top: 80px; }
 
         .login-story h1 {
-            max-width: 560px;
-            margin: 0;
-            font-family: Georgia, 'Times New Roman', serif;
-            font-size: 64px;
+            font-family: var(--serif);
+            font-size: clamp(42px, 4.6vw, 68px);
             font-weight: 400;
-            line-height: 0.98;
-        }
-
-        .login-story h1 em {
-            color: #d6ec8d;
-            font-style: italic;
+            line-height: 1.02;
+            letter-spacing: -0.02em;
         }
 
         .login-story-description {
-            max-width: 430px;
-            margin: 24px 0 0;
-            color: rgba(255, 255, 255, 0.84);
+            max-width: 440px;
+            margin-top: 22px;
+            color: rgba(255, 255, 255, 0.82);
             font-size: 16px;
             line-height: 1.7;
         }
 
-        .login-story-note {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-top: 42px;
-            color: rgba(255, 255, 255, 0.84);
-            font-size: 13px;
+        .story-points {
+            display: grid;
+            gap: 18px;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.22);
+            list-style: none;
         }
 
-        .login-story-note::before {
-            width: 34px;
-            height: 1px;
-            background: #d6ec8d;
-            content: '';
-        }
+        .story-points li { display: flex; align-items: flex-start; gap: 14px; }
 
+        .story-points svg { flex-shrink: 0; width: 22px; height: 22px; margin-top: 2px; color: var(--lime); }
+
+        .story-points strong { display: block; font-size: 15px; font-weight: 600; }
+
+        .story-points span { display: block; margin-top: 2px; color: rgba(255, 255, 255, 0.72); font-size: 13.5px; line-height: 1.5; }
+
+        /* ===== FORM PANEL ===== */
         .login-container {
             align-self: center;
             justify-self: center;
             width: min(100% - 48px, 440px);
-            max-width: 440px;
-            margin: 32px auto;
-            padding: 40px;
-            border: 1px solid #e4eadd;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.96);
-            box-shadow: 0 24px 64px rgba(27, 57, 39, 0.09);
-            transition: none;
-        }
-
-        .login-container:hover {
-            transform: none;
-        }
-
-        .login-header {
-            margin-bottom: 25px;
-            text-align: left;
+            margin: 40px 0;
         }
 
         .login-header h2 {
-            color: #17352a;
-            font-family: Georgia, 'Times New Roman', serif;
-            font-size: 36px;
-            font-weight: 400;
+            font-family: var(--serif);
+            font-size: 38px;
+            font-weight: 500;
             line-height: 1.1;
+            letter-spacing: -0.015em;
         }
 
-        .login-header p {
-            margin-top: 10px;
-            color: #64746b;
-            font-size: 14px;
-            line-height: 1.6;
-        }
+        .login-header p { margin-top: 12px; color: var(--muted); font-size: 15px; line-height: 1.6; }
 
-        form {
-            gap: 17px;
-        }
-
-        label {
-            margin-bottom: 7px;
-            color: #17352a;
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        input {
-            min-height: 49px;
-            padding: 0.8rem 0.9rem;
-            border: 1px solid #dce4d8;
-            border-radius: 6px;
-            color: #17352a;
-            background: #fbfcf9;
-        }
-
-        input:focus {
-            border-color: #226944;
-            box-shadow: 0 0 0 3px rgba(34, 105, 68, 0.13);
-        }
-
-        .toggle-password {
-            color: #226944;
-            font-size: 0.75rem;
-            font-weight: 700;
-        }
-
-        button[type="submit"] {
-            min-height: 50px;
-            margin-top: 4px;
-            border-radius: 6px;
-            background: #226944;
-        }
-
-        button[type="submit"]:hover {
-            background: #194f35;
-            transform: translateY(-1px);
-        }
-
-        .divider {
-            margin: 20px 0;
-            color: #64746b;
-        }
-
-        .divider::before {
-            background: #e4eadd;
-        }
-
-        .google-btn {
-            min-height: 48px;
-            border: 1px solid #dce4d8;
-            border-radius: 6px;
-            color: #17352a;
-            font-size: 13px;
-            background: #fff;
-        }
-
-        .google-btn:hover {
-            border-color: #226944;
-            color: #17352a;
-            background: #f4f8ef;
-            transform: none;
-        }
-
-        .register-link {
-            margin-top: 22px;
-            color: #64746b;
-            font-size: 13px;
-        }
-
-        .register-link a {
-            color: #226944;
-            font-weight: 700;
-        }
-
-        .status-message {
-            margin-bottom: 18px;
+        .alert {
+            margin-top: 24px;
             padding: 12px 14px;
-            border: 1px solid #cfe1bc;
-            border-radius: 6px;
-            color: #1d5638;
-            background: #f0f7e8;
-            font-size: 13px;
+            border: 1px solid;
+            border-radius: 10px;
+            font-size: 13.5px;
             line-height: 1.5;
         }
 
-        .form-error {
-            margin-top: 5px;
-            color: #b42318;
-            font-size: 12px;
+        .alert-success { border-color: #cfe1bc; background: #f0f7e8; color: #1d5638; }
+
+        .alert-error { border-color: #f1c6c1; background: #fdf1f0; color: var(--error); }
+
+        form { display: flex; flex-direction: column; gap: 18px; margin-top: 28px; }
+
+        label { display: block; margin-bottom: 7px; font-size: 13.5px; font-weight: 600; }
+
+        .input-group { position: relative; }
+
+        input {
+            width: 100%;
+            min-height: 50px;
+            padding: 0 14px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: var(--field);
+            color: var(--ink);
+            font: inherit;
+            font-size: 15px;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
 
-        input.is-invalid {
-            border-color: #b42318;
+        input::placeholder { color: #9aa99f; }
+
+        input:hover { border-color: #bccab6; }
+
+        input:focus {
+            outline: none;
+            border-color: var(--leaf);
+            box-shadow: 0 0 0 4px rgba(31, 107, 68, 0.14);
         }
 
-        @media (max-width: 900px) {
-            body {
-                grid-template-columns: minmax(0, 0.9fr) minmax(400px, 1.1fr);
-            }
+        .input-group input { padding-right: 64px; }
 
-            .login-story {
-                padding: 36px;
-            }
+        input.is-invalid { border-color: var(--error); }
 
-            .login-story h1 {
-                font-size: 52px;
-            }
-
-            .login-container {
-                padding: 32px;
-            }
+        .toggle-password {
+            position: absolute;
+            top: 50%;
+            right: 6px;
+            transform: translateY(-50%);
+            padding: 8px 10px;
+            border: none;
+            border-radius: 6px;
+            background: none;
+            color: var(--leaf);
+            font: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
         }
 
-        @media (max-width: 700px) {
-            body {
-                display: flex;
-                flex-direction: column;
-            }
+        .toggle-password:hover { background: #eef4ea; }
 
-            .login-story {
-                min-height: 280px;
-                padding: 24px 26px 28px;
-            }
-
-            .login-story-copy {
-                padding-top: 42px;
-            }
-
-            .login-story h1 {
-                font-size: 40px;
-            }
-
-            .login-story-description {
-                margin-top: 13px;
-                font-size: 14px;
-            }
-
-            .login-story-note {
-                display: none;
-            }
-
-            .login-container {
-                width: min(100% - 32px, 520px);
-                margin: 22px auto 32px;
-                padding: 28px 24px;
-            }
+        button[type="submit"] {
+            min-height: 52px;
+            margin-top: 6px;
+            border: none;
+            border-radius: 10px;
+            background: var(--leaf);
+            color: #fff;
+            font: inherit;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
         }
 
-        @media (max-width: 380px) {
-            .login-story h1 {
-                font-size: 35px;
-            }
+        button[type="submit"]:hover {
+            background: var(--leaf-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(23, 83, 58, 0.25);
+        }
 
-            .login-container {
-                padding: 24px 20px;
-            }
+        button[type="submit"]:disabled { opacity: 0.7; cursor: wait; transform: none; box-shadow: none; }
 
-            .login-header h2 {
-                font-size: 31px;
-            }
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin: 24px 0;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+
+        .google-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-height: 50px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: #fff;
+            color: var(--ink);
+            font-size: 14.5px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .google-btn:hover { border-color: var(--leaf); background: #f4f8ef; }
+
+        .google-icon { width: 18px; height: 18px; flex-shrink: 0; }
+
+        .register-link { margin-top: 26px; color: var(--muted); font-size: 14px; text-align: center; }
+
+        .register-link a { color: var(--leaf); font-weight: 600; text-decoration: none; }
+
+        .register-link a:hover { text-decoration: underline; }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 960px) {
+            body { grid-template-columns: minmax(0, 0.85fr) minmax(400px, 1.15fr); }
+            .login-story { padding: 36px; }
+        }
+
+        @media (max-width: 760px) {
+            body { display: flex; flex-direction: column; }
+            .login-story { min-height: 280px; padding: 24px 24px 30px; }
+            .login-story-copy { padding-top: 40px; }
+            .login-story-description { font-size: 14.5px; }
+            .story-points { display: none; }
+            .login-container { width: min(100% - 40px, 480px); margin: 32px auto 44px; }
+            .login-header h2 { font-size: 32px; }
+        }
+
+        @media (min-width: 761px) and (max-height: 760px) {
+            .login-container { margin: 20px 0; }
+            form { gap: 14px; margin-top: 20px; }
+            .login-header h2 { font-size: 32px; }
+            input, .google-btn { min-height: 46px; }
+            button[type="submit"] { min-height: 48px; }
+            .divider { margin: 16px 0; }
+            .register-link { margin-top: 18px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * { transition: none !important; }
         }
     </style>
 </head>
@@ -533,80 +294,96 @@
 <body>
     <section class="login-story" aria-labelledby="login-story-title">
         <img class="login-story-image" src="{{ asset('images/EarthFront.png') }}" alt="" aria-hidden="true">
-        <a class="login-brand" href="{{ route('home') }}">
-            <span class="login-brand-mark" aria-hidden="true">B</span>
-            <span>Biodex</span>
+
+        <a class="login-brand" href="{{ route('home') }}" aria-label="Biodex home">
+            <img src="{{ asset('/images/biodex-logo.png') }}" alt="Biodex">
         </a>
+
         <div class="login-story-copy">
-            <p class="login-story-eyebrow">Welcome back to Biodex</p>
-            <h1>Keep good things <em>moving.</em></h1>
+            <h1 id="login-story-title">Keep good things moving.</h1>
             <p class="login-story-description">Pick up where you left off and find your next local way to make a difference.</p>
-            <p class="login-story-note">Reuse more. Waste less. Stay connected.</p>
+
+            <ul class="story-points">
+                <li>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                    <div><strong>Collection points</strong><span>Your saved places and nearby drop-offs, ready when you are.</span></div>
+                </li>
+                <li>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/></svg>
+                    <div><strong>Reuse</strong><span>Keep giving useful things a second life.</span></div>
+                </li>
+                <li>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9"/><path d="M16 3.1a4 4 0 0 1 0 7.8"/></svg>
+                    <div><strong>Local initiatives</strong><span>Stay connected with projects in your community.</span></div>
+                </li>
+            </ul>
         </div>
     </section>
 
-    <div class="login-container">
+    <main class="login-container">
         <div class="login-header">
-            <h2>Sign in</h2>
-            <p>Access your Biodex account.</p>
+            <h2>Welcome back</h2>
+            <p>Sign in to your Biodex account.</p>
         </div>
 
         @if (session('status'))
-            <div class="status-message" role="status">{{ session('status') }}</div>
+            <div class="alert alert-success" role="status">{{ session('status') }}</div>
         @endif
 
         @if ($errors->any())
-            <div class="form-error" role="alert">{{ $errors->first() }}</div>
+            <div class="alert alert-error" role="alert">{{ $errors->first() }}</div>
         @endif
 
-        <form method="POST" action="{{ route('login') }}">
+        <form method="POST" action="{{ route('login') }}" id="login-form">
             @csrf
+
             <div>
                 <label for="email">Email address</label>
-                <input id="email" type="email" name="email" placeholder="you@example.com" value="{{ old('email') }}" class="{{ $errors->has('email') ? 'is-invalid' : '' }}" autocomplete="email" required>
-                @error('email')<p class="form-error">{{ $message }}</p>@enderror
+                <input id="email" type="email" name="email" placeholder="you@example.com" autocomplete="email"
+                       value="{{ old('email') }}" class="{{ $errors->has('email') ? 'is-invalid' : '' }}" required autofocus>
             </div>
 
             <div>
                 <label for="password">Password</label>
                 <div class="input-group">
-                    <input id="password" type="password" name="password" placeholder="••••••••" required>
+                    <input id="password" type="password" name="password" placeholder="Your password" autocomplete="current-password"
+                           class="{{ $errors->has('password') ? 'is-invalid' : '' }}" required>
                     <button type="button" class="toggle-password" aria-label="Show password" onclick="togglePassword('password', this)">Show</button>
                 </div>
             </div>
 
-            <button type="submit">Sign in</button>
+            <button type="submit" id="submit-btn">Sign in</button>
         </form>
 
-        <div class="divider">
-            <span>or</span>
-        </div>
+        <div class="divider"><span>or</span></div>
 
-        <div class="google-login">
-            <a href="{{ route('auth.google') }}" class="google-btn">
-                <svg class="google-icon" width="18" height="18" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                </svg>
-                Continue with Google
-            </a>
-        </div>
+        <a href="{{ route('auth.google') }}" class="google-btn">
+            <svg class="google-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            Continue with Google
+        </a>
 
-        <div class="register-link">
-            <p>Don’t have an account? <a href="{{ route('register.form') }}">Create one</a></p>
-        </div>
-    </div>
+        <p class="register-link">New to Biodex? <a href="{{ route('register.form') }}">Create an account</a></p>
+    </main>
 
     <script>
         function togglePassword(id, btn) {
             const input = document.getElementById(id);
-            const isPassword = input.type === "password";
-            input.type = isPassword ? "text" : "password";
-            btn.textContent = isPassword ? "Hide" : "Show";
-            btn.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+            const show = input.type === 'password';
+            input.type = show ? 'text' : 'password';
+            btn.textContent = show ? 'Hide' : 'Show';
+            btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
         }
+
+        document.getElementById('login-form').addEventListener('submit', function () {
+            const btn = document.getElementById('submit-btn');
+            btn.disabled = true;
+            btn.textContent = 'Signing in...';
+        });
     </script>
 </body>
 </html>

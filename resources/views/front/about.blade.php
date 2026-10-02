@@ -105,32 +105,7 @@
 
 <section class="py-5">
     <div class="container">
-        <div class="row g-4 mb-5">
-            <div class="col-md-3 col-6">
-                <div class="stat-card">
-                    <span class="number">12k+</span>
-                    <small class="text-muted">people engaged</small>
-                </div>
-            </div>
-            <div class="col-md-3 col-6">
-                <div class="stat-card">
-                    <span class="number">480</span>
-                    <small class="text-muted">eco actions</small>
-                </div>
-            </div>
-            <div class="col-md-3 col-6">
-                <div class="stat-card">
-                    <span class="number">68</span>
-                    <small class="text-muted">partners</small>
-                </div>
-            </div>
-            <div class="col-md-3 col-6">
-                <div class="stat-card">
-                    <span class="number">94%</span>
-                    <small class="text-muted">recycling awareness</small>
-                </div>
-            </div>
-        </div>
+      
 
         <div class="row align-items-center g-4 mb-5">
             <div class="col-lg-6">
@@ -146,7 +121,7 @@
                 </p>
             </div>
             <div class="col-lg-6">
-                <img src="{{ asset('images/Earth Day Banner.png') }}" alt="Biodex mission" class="img-fluid rounded-4 shadow-sm w-100" style="height: 360px; object-fit: cover;">
+                <img src="{{ asset('images/EarthDayBanner.jpg') }}" alt="Biodex mission" class="img-fluid rounded-4 shadow-sm w-100" style="height: 360px; object-fit: cover;">
             </div>
         </div>
 

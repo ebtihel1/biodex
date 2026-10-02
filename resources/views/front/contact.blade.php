@@ -102,38 +102,7 @@
         </div>
 
         <div class="row g-4 align-items-start">
-            <div class="col-lg-5">
-                <div class="form-panel">
-                    <h3 class="fw-bold text-success mb-3">Send a message</h3>
-                    <form action="#" method="POST">
-                        @csrf
-                        <div class="mb-3">
-                            <label for="name" class="form-label">Full name</label>
-                            <input type="text" id="name" name="name" class="form-control" placeholder="Your name" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" id="email" name="email" class="form-control" placeholder="you@example.com" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="subject" class="form-label">Subject</label>
-                            <select id="subject" name="subject" class="form-select" required>
-                                <option value="">Choose a subject</option>
-                                <option value="question">Question</option>
-                                <option value="partnership">Partnership</option>
-                                <option value="donation">Donation</option>
-                                <option value="volunteer">Volunteer</option>
-                                <option value="other">Other</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="message" class="form-label">Message</label>
-                            <textarea id="message" name="message" rows="5" class="form-control" placeholder="Tell us how we can help..." required></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-success w-100">Send message</button>
-                    </form>
-                </div>
-            </div>
+          
 
             <div class="col-lg-7">
                 <div class="form-panel h-100">

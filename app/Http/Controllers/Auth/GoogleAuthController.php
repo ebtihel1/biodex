@@ -17,6 +17,14 @@ class GoogleAuthController extends Controller
      */
     public function redirectToGoogle()
     {
+        if (blank(config('services.google.client_id'))
+            || blank(config('services.google.client_secret'))
+            || blank(config('services.google.redirect'))) {
+            return redirect('/login')->withErrors([
+                'google' => 'Google sign-in is not configured. Set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_REDIRECT_URI in your .env file.',
+            ]);
+        }
+
         try {
             return Socialite::driver('google')->redirect();
         } catch (\Exception $e) {
@@ -31,18 +39,6 @@ class GoogleAuthController extends Controller
     public function handleGoogleCallback()
     {
         try {
-            // Configure Guzzle to ignore SSL verification for development
-            $guzzleClient = new \GuzzleHttp\Client([
-                'verify' => false,
-                'curl' => [
-                    CURLOPT_SSL_VERIFYPEER => false,
-                    CURLOPT_SSL_VERIFYHOST => false,
-                ]
-            ]);
-            
-            // Set the Guzzle client for Socialite
-            Socialite::driver('google')->setHttpClient($guzzleClient);
-            
             $googleUser = Socialite::driver('google')->user();
             
             // Log pour debug

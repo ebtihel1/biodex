@@ -19,6 +19,20 @@ class AuthenticationTest extends TestCase
         $response->assertStatus(200);
     }
 
+    public function test_google_login_reports_missing_oauth_configuration(): void
+    {
+        config([
+            'services.google.client_id' => null,
+            'services.google.client_secret' => null,
+            'services.google.redirect' => null,
+        ]);
+
+        $response = $this->get('/auth/google');
+
+        $response->assertRedirect('/login');
+        $response->assertSessionHasErrors('google');
+    }
+
     public function test_users_can_authenticate_using_the_login_screen(): void
     {
         $user = User::factory()->create();

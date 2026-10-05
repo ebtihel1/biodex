@@ -470,6 +470,7 @@
     </div>
 
     <script>
+    (() => {
         // Mobile sidebar management
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         const sidebar = document.getElementById('sidebar');
@@ -611,14 +612,31 @@
             loadingSpinner.classList.remove('hidden');
 
             const rows = document.querySelectorAll('#predictionsBody tr');
-            const labels = [];
-            const dataValues = [];
-
-            for (const row of rows) {
+            const predictionResults = await Promise.all(Array.from(rows, async row => {
                 const id = row.id.replace('row-', '');
                 try {
                     const res = await fetch(`/collection-ai/predict/${id}`);
                     const data = await res.json();
+
+                    if (res.status === 422 && data.status === 'insufficient_data') {
+                        const volumeElement = document.getElementById(`volume-${id}`);
+                        const statusElement = document.getElementById(`status-${id}`);
+                        const lastCollectionElement = document.getElementById(`lastCollection-${id}`);
+                        const lastCollection = data.last_collection_at ? new Date(data.last_collection_at) : null;
+                        const lastCollectionLabel = lastCollection && !Number.isNaN(lastCollection.getTime())
+                            ? lastCollection.toLocaleDateString()
+                            : 'No collection recorded';
+
+                        volumeElement.innerHTML = `
+                            <div class="font-medium text-amber-700">Insufficient history</div>
+                            <div class="text-xs text-gray-500">${data.training_days}/${data.required_training_days} required days</div>
+                        `;
+                        statusElement.innerHTML = createStatusBadge('unknown');
+                        lastCollectionElement.innerHTML = `<div class="text-gray-700">${lastCollectionLabel}</div>`;
+                        delete allPointsData[id];
+                        return null;
+                    }
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
                     const volumeElement = document.getElementById(`volume-${id}`);
                     const statusElement = document.getElementById(`status-${id}`);
@@ -635,22 +653,29 @@
                     // Update volume
                     volumeElement.innerHTML = `
                         <div class="font-bold text-gray-800">${Math.round(data.predicted_volume)} kg</div>
+                        <div class="text-xs text-gray-500">${Number.isFinite(data.lower_bound) && Number.isFinite(data.upper_bound) ? `Range ${Math.round(data.lower_bound)}–${Math.round(data.upper_bound)} kg` : ''}${data.confidence ? ` · ${Math.round(data.confidence * 100)}% heuristic confidence` : ''}</div>
+                        <div class="text-xs text-gray-500">${data.forecast_model || 'Unknown model'} · ${data.observation_coverage !== undefined ? `${Math.round(data.observation_coverage * 100)}% observed days` : 'coverage unavailable'}</div>
                     `;
                     
                     // Update status with badge
                     statusElement.innerHTML = createStatusBadge(data.status);
                     
-                    // Simulate a last collection date (to be replaced with real data)
-                    const daysAgo = Math.floor(Math.random() * 7) + 1;
+                    const lastCollection = data.last_collection_at ? new Date(data.last_collection_at) : null;
+                    const daysAgo = lastCollection && !Number.isNaN(lastCollection.getTime())
+                        ? Math.max(0, Math.floor((Date.now() - lastCollection.getTime()) / 86400000))
+                        : null;
                     lastCollectionElement.innerHTML = `
-                        <div class="text-gray-700">${daysAgo} day${daysAgo > 1 ? 's' : ''} ago</div>
+                        <div class="text-gray-700">${daysAgo === null ? 'No collection recorded' : daysAgo === 0 ? 'Today' : `${daysAgo} day${daysAgo > 1 ? 's' : ''} ago`}</div>
                     `;
                     
-                    // Add data for the chart - use the real point name
-                    labels.push(pointNameElement.textContent);
-                    dataValues.push(Math.round(data.predicted_volume));
+                    return {
+                        label: pointNameElement.textContent,
+                        volume: Math.round(data.predicted_volume),
+                        status: data.status,
+                    };
 
                 } catch (error) {
+                    delete allPointsData[id];
                     document.getElementById(`status-${id}`).innerHTML = `
                         <span class="status-badge status-unknown flex items-center">
                             <i class="fas fa-exclamation-circle mr-1"></i>
@@ -658,8 +683,13 @@
                         </span>
                     `;
                     console.error(`Error for point ${id}:`, error);
+                    return null;
                 }
-            }
+            }));
+
+            const chartPoints = predictionResults.filter(Boolean);
+            const labels = chartPoints.map(point => point.label);
+            const dataValues = chartPoints.map(point => point.volume);
 
             // Update the chart
             if (chart) chart.destroy();
@@ -681,9 +711,8 @@
                         datasets: [{
                             label: "Predicted Volume (kg)",
                             data: dataValues,
-                            backgroundColor: dataValues.map((v, i) => {
-                                const id = rows[i].id.replace('row-', '');
-                                const status = allPointsData[id]?.status;
+                            backgroundColor: chartPoints.map(point => {
+                                const status = point.status;
                                 return status === "full" ? 'rgba(239, 68, 68, 0.7)' :
                                        status === "almost full" ? 'rgba(249, 115, 22, 0.7)' :
                                        status === "normal" ? 'rgba(34, 197, 94, 0.7)' : 'rgba(156, 163, 175, 0.7)';
@@ -819,6 +848,7 @@
         setTimeout(() => {
             fetchPredictions();
         }, 1000);
+    })();
     </script>
 </body>
 </html>

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Waste; 
 use App\Models\CollectionPoint;
+use App\Models\WasteCategory;
 
 class WasteController extends Controller
 {
@@ -14,23 +15,43 @@ class WasteController extends Controller
      */
     public function index(Request $request)
     {
-        // On crée une query builder pour le modèle Waste
-        $query = Waste::query();
+        $search = trim((string) $request->input('search', ''));
+        $status = $request->input('status');
+        $categoryId = $request->input('category');
 
-        // Si l'utilisateur a envoyé un terme de recherche
-        if ($request->filled('search')) {
-            $search = $request->input('search');
+        $query = Waste::query()->with(['category', 'user', 'collectionPoint']);
 
-            $query->where('type', 'like', "%{$search}%")
-                  ->orWhereHas('category', function ($q) use ($search) {
-                      $q->where('name', 'like', "%{$search}%");
-                  });
+        if ($search !== '') {
+            $query->where(function ($filter) use ($search) {
+                $filter->where('type', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhereHas('category', fn ($category) => $category->where('name', 'like', "%{$search}%"))
+                    ->orWhereHas('user', fn ($user) => $user->where('name', 'like', "%{$search}%"))
+                    ->orWhereHas('collectionPoint', fn ($point) => $point->where('name', 'like', "%{$search}%"));
+            });
         }
 
-        // On récupère les résultats paginés
-        $wastes = $query->paginate(10)->withQueryString();
+        if (in_array($status, ['recyclable', 'reusable'], true)) {
+            $query->where('status', $status);
+        } else {
+            $status = '';
+        }
 
-        return view('waste.list', compact('wastes'));
+        if (is_numeric($categoryId)) {
+            $query->where('waste_category_id', (int) $categoryId);
+        } else {
+            $categoryId = '';
+        }
+
+        $wastes = $query->latest()->paginate(12)->withQueryString();
+        $categories = WasteCategory::query()->orderBy('name')->get(['id', 'name']);
+        $summary = Waste::query()
+            ->selectRaw('COUNT(*) as total_count, COALESCE(SUM(weight), 0) as total_weight')
+            ->selectRaw("SUM(CASE WHEN status = 'recyclable' THEN 1 ELSE 0 END) as recyclable_count")
+            ->selectRaw("SUM(CASE WHEN status = 'reusable' THEN 1 ELSE 0 END) as reusable_count")
+            ->first();
+
+        return view('waste.list', compact('wastes', 'categories', 'summary', 'search', 'status', 'categoryId'));
     }
 
     /**

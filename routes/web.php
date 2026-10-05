@@ -86,7 +86,7 @@ Route::middleware(['auth'])->group(function () {
 });
 
     //Waste Routes
-    Route::get('    ', [WasteController::class, 'index'])->name('wastes.index');
+    Route::get('wastes', [WasteController::class, 'index'])->name('wastes.index');
     Route::get('wastes/create', [WasteController::class, 'create'])->name('wastes.create');
     Route::post('wastes', [WasteController::class, 'store'])->name('wastes.store');
     Route::get('wastes/{id}/edit', [WasteController::class, 'edit'])->name('wastes.edit');

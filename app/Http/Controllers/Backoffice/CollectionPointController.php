@@ -90,6 +90,6 @@ class CollectionPointController extends Controller
     public function predictions()
 {
     $collectionPoints = \App\Models\CollectionPoint::all();
-    return view('back.collectionpoints.predictions', compact('collectionPoints'));
+    return view('back.collectionpoints.predictions_dashboard', compact('collectionPoints'));
 }
 }

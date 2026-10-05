@@ -330,6 +330,7 @@ document.getElementById('quality-form').addEventListener('submit', function(e) {
             document.getElementById('quality-content').innerHTML = `
                 <strong>Score:</strong> ${result.score}%<br>
                 <strong>Level:</strong> <span class="badge bg-${result.color}">${result.level}</span><br>
+                <small class="text-muted">Rule-based estimate; confidence reflects input completeness, not calibrated accuracy.</small><br>
                 <strong>Recommendations:</strong><br>
                 <ul>${result.recommendations.map(rec => `<li>${rec}</li>`).join('')}</ul>
             `;
@@ -367,7 +368,9 @@ document.getElementById('price-form').addEventListener('submit', function(e) {
                 <strong>Estimated price:</strong> ${result.estimated_price} DT<br>
                 <strong>Final price (with margin):</strong> <span class="fw-bold text-success">${result.final_price} DT</span><br>
                 <strong>Profit margin:</strong> ${result.profit_margin} DT<br>
-                <strong>Confidence:</strong> ${(result.confidence * 100).toFixed(1)}%
+                <strong>Indicative range:</strong> ${result.price_range[0]}–${result.price_range[1]} DT<br>
+                <strong>Heuristic score:</strong> ${(result.confidence * 100).toFixed(1)}%<br>
+                <small class="text-muted">${result.disclaimer}</small>
             `;
             document.getElementById('price-result').style.display = 'block';
         } else {
@@ -406,11 +409,11 @@ document.getElementById('description-form').addEventListener('submit', function(
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            document.getElementById('description-content').innerHTML = `
-                <div class="p-3 bg-light rounded">
-                    ${data.description}
-                </div>
-            `;
+            const descriptionContent = document.getElementById('description-content');
+            const descriptionBox = document.createElement('div');
+            descriptionBox.className = 'p-3 bg-light rounded';
+            descriptionBox.textContent = data.description;
+            descriptionContent.replaceChildren(descriptionBox);
             document.getElementById('description-result').style.display = 'block';
         } else {
             alert('Error: ' + data.error);

@@ -334,7 +334,7 @@
 
             <div>
                 <label for="name">Full name</label>
-                <input id="name" type="text" name="name" placeholder="John Doe" autocomplete="name"
+                <input id="name" type="text" name="name" placeholder="name" autocomplete="name"
                        value="{{ old('name') }}" class="{{ $errors->has('name') ? 'is-invalid' : '' }}" required>
                 @error('name')<p class="field-error">{{ $message }}</p>@enderror
             </div>

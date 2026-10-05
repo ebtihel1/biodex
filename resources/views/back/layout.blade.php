@@ -350,9 +350,7 @@
                     </ul>
                 </li>
 
-                <li class="nav-item mb-2">
-                    <a href="#" class="nav-link" data-tooltip="Catégories" aria-label="Catégories"><i class="bi bi-tags me-2"></i> <span class="nav-text">Catégories</span></a>
-                </li>
+               
                 <li class="nav-item mb-2">
                     <a href="{{ route('back.campaigns') }}" class="nav-link" data-tooltip="Campaign Management" aria-label="Campaign Management"><i class="bi bi-megaphone me-2"></i> <span class="nav-text">Campaign Management</span></a>
                 </li>

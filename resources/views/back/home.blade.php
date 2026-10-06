@@ -13,7 +13,7 @@
     .card:hover {
         transform: translateY(-5px);
     }
-    
+
     /* Stat cards */
     .stat-card {
         border-left: 4px solid;
@@ -31,21 +31,37 @@
     .stat-card.danger {
         border-left-color: #dc3545;
     }
-    
+
     /* Chart containers */
     .chart-container {
         position: relative;
         height: 300px;
         width: 100%;
     }
-    
+
+    .chart-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: #6c757d;
+        text-align: center;
+        padding: 1rem;
+    }
+
+    .chart-empty i {
+        font-size: 2rem;
+        opacity: 0.5;
+    }
+
     /* Recent activity */
     .activity-item {
         border-left: 3px solid #0d6efd;
         padding-left: 1rem;
         margin-bottom: 1rem;
     }
-    
+
     /* Custom colors */
     .bg-primary-light {
         background-color: rgba(13, 110, 253, 0.1);
@@ -59,13 +75,17 @@
     .bg-danger-light {
         background-color: rgba(220, 53, 69, 0.1);
     }
-    
+
     /* Progress bars */
     .progress {
         height: 8px;
-        border-radius: 4px;
     }
-    
+
+    .campaign-meta {
+        color: #6c757d;
+        font-size: 0.78rem;
+    }
+
     /* Top waste items */
     .waste-item {
         display: flex;
@@ -75,6 +95,13 @@
         margin-bottom: 0.5rem;
         background-color: #f8f9fa;
     }
+
+    .empty-panel {
+        padding: 2rem 1rem;
+        color: #6c757d;
+        text-align: center;
+        font-size: 0.9rem;
+    }
 </style>
 
 <div class="p-4">
@@ -83,11 +110,11 @@
         <div class="col-md-3">
             <div class="card stat-card primary bg-primary-light">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-between">
                         <div>
                             <h5 class="card-title">Total Waste</h5>
-                            <h2 class="mb-0">1,254</h2>
-                            <span class="text-success"><i class="bi bi-arrow-up"></i> 12.5%</span>
+                            <h2 class="mb-0">{{ number_format($totalWeight, 1) }} kg</h2>
+                            <span class="text-muted">{{ $wasteCount }} {{ \Illuminate\Support\Str::plural('entry', $wasteCount) }} recorded</span>
                         </div>
                         <div class="align-self-center">
                             <i class="bi bi-trash fs-1 text-primary"></i>
@@ -99,11 +126,11 @@
         <div class="col-md-3">
             <div class="card stat-card success bg-success-light">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-between">
                         <div>
                             <h5 class="card-title">Recycled</h5>
-                            <h2 class="mb-0">842</h2>
-                            <span class="text-success"><i class="bi bi-arrow-up"></i> 8.3%</span>
+                            <h2 class="mb-0">{{ number_format($recycledWeight, 1) }} kg</h2>
+                            <span class="text-success">{{ $recycledShare }}% of total weight</span>
                         </div>
                         <div class="align-self-center">
                             <i class="bi bi-recycle fs-1 text-success"></i>
@@ -115,11 +142,11 @@
         <div class="col-md-3">
             <div class="card stat-card warning bg-warning-light">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-between">
                         <div>
                             <h5 class="card-title">Active Campaigns</h5>
-                            <h2 class="mb-0">15</h2>
-                            <span class="text-danger"><i class="bi bi-arrow-down"></i> 2.1%</span>
+                            <h2 class="mb-0">{{ $activeCampaigns }}</h2>
+                            <span class="text-muted">{{ $participationCount }} {{ \Illuminate\Support\Str::plural('participation', $participationCount) }}</span>
                         </div>
                         <div class="align-self-center">
                             <i class="bi bi-megaphone fs-1 text-warning"></i>
@@ -131,11 +158,11 @@
         <div class="col-md-3">
             <div class="card stat-card danger bg-danger-light">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-between">
                         <div>
                             <h5 class="card-title">Pending Requests</h5>
-                            <h2 class="mb-0">23</h2>
-                            <span class="text-success"><i class="bi bi-arrow-up"></i> 5.7%</span>
+                            <h2 class="mb-0">{{ $pendingRequests }}</h2>
+                            <span class="text-muted">Orders and reservations awaiting action</span>
                         </div>
                         <div class="align-self-center">
                             <i class="bi bi-clock fs-1 text-danger"></i>
@@ -156,6 +183,12 @@
                 <div class="card-body">
                     <div class="chart-container">
                         <canvas id="trendChart"></canvas>
+                        @if(empty($trendChart['datasets']))
+                        <div class="chart-empty" id="trendEmpty">
+                            <i class="bi bi-graph-up"></i>
+                            <p class="mb-0 mt-2">No waste entries recorded yet.</p>
+                        </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -168,6 +201,12 @@
                 <div class="card-body">
                     <div class="chart-container">
                         <canvas id="distributionChart"></canvas>
+                        @if(empty($distributionChart['data']))
+                        <div class="chart-empty" id="distributionEmpty">
+                            <i class="bi bi-pie-chart"></i>
+                            <p class="mb-0 mt-2">No waste entries recorded yet.</p>
+                        </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -182,42 +221,26 @@
                     <h5 class="card-title mb-0">Campaign Progress</h5>
                 </div>
                 <div class="card-body">
+                    @forelse($campaignProgress as $campaign)
                     <div class="mb-3">
-                        <div class="d-flex justify-content-between mb-1">
-                            <span>Plastic Collection Drive</span>
-                            <span>75%</span>
+                        <div class="d-flex justify-between mb-1">
+                            <span>{{ $campaign['title'] }}</span>
+                            <span>{{ $campaign['progress'] }}%</span>
                         </div>
                         <div class="progress">
-                            <div class="progress-bar bg-success" role="progressbar" style="width: 75%"></div>
+                            <div class="progress-bar {{ $campaign['progress'] >= 75 ? 'bg-success' : ($campaign['progress'] >= 40 ? 'bg-warning' : 'bg-info') }}"
+                                 role="progressbar"
+                                 style="width: {{ $campaign['progress'] }}%"
+                                 aria-valuenow="{{ $campaign['progress'] }}" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
+                        <small class="campaign-meta">{{ $campaign['location'] }} · {{ $campaign['period'] }} · {{ $campaign['participants'] }} participants</small>
                     </div>
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between mb-1">
-                            <span>E-Waste Awareness</span>
-                            <span>45%</span>
-                        </div>
-                        <div class="progress">
-                            <div class="progress-bar bg-info" role="progressbar" style="width: 45%"></div>
-                        </div>
+                    @empty
+                    <div class="empty-panel">
+                        <i class="bi bi-megaphone d-block mb-2 fs-4"></i>
+                        No active campaigns right now.
                     </div>
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between mb-1">
-                            <span>Composting Initiative</span>
-                            <span>90%</span>
-                        </div>
-                        <div class="progress">
-                            <div class="progress-bar bg-warning" role="progressbar" style="width: 90%"></div>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between mb-1">
-                            <span>Paper Recycling</span>
-                            <span>60%</span>
-                        </div>
-                        <div class="progress">
-                            <div class="progress-bar bg-danger" role="progressbar" style="width: 60%"></div>
-                        </div>
-                    </div>
+                    @endforelse
                 </div>
             </div>
         </div>
@@ -225,29 +248,20 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Recent Activity</h5>
-                    <a href="#" class="btn btn-sm btn-outline-primary">View All</a>
                 </div>
                 <div class="card-body">
+                    @forelse($recentActivity as $activity)
                     <div class="activity-item">
-                        <h6 class="mb-1">New waste collection request</h6>
-                        <p class="mb-1 text-muted">Plastic bottles from Green Office Ltd.</p>
-                        <small class="text-muted">2 hours ago</small>
+                        <h6 class="mb-1">{{ $activity['title'] }}</h6>
+                        <p class="mb-1 text-muted">{{ $activity['detail'] }}</p>
+                        <small class="text-muted">{{ $activity['time'] }}</small>
                     </div>
-                    <div class="activity-item">
-                        <h6 class="mb-1">Campaign completed</h6>
-                        <p class="mb-1 text-muted">"Recycle Electronics" reached its target</p>
-                        <small class="text-muted">Yesterday</small>
+                    @empty
+                    <div class="empty-panel">
+                        <i class="bi bi-clock-history d-block mb-2 fs-4"></i>
+                        Nothing has happened yet.
                     </div>
-                    <div class="activity-item">
-                        <h6 class="mb-1">New category added</h6>
-                        <p class="mb-1 text-muted">"Biodegradable Packaging" category created</p>
-                        <small class="text-muted">2 days ago</small>
-                    </div>
-                    <div class="activity-item">
-                        <h6 class="mb-1">Monthly report generated</h6>
-                        <p class="mb-1 text-muted">August 2023 waste management report</p>
-                        <small class="text-muted">3 days ago</small>
-                    </div>
+                    @endforelse
                 </div>
             </div>
         </div>
@@ -258,187 +272,120 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="card-title mb-0">Top Waste Items</h5>
+                    <h5 class="card-title mb-0">Top Waste Categories</h5>
                 </div>
                 <div class="card-body">
+                    @if(empty($topWastes))
+                    <div class="empty-panel">
+                        <i class="bi bi-trash d-block mb-2 fs-4"></i>
+                        No waste entries recorded yet.
+                    </div>
+                    @else
                     <div class="row">
-                        <div class="col-md-4">
+                        @foreach($topWastes as $index => $category)
+                        <div class="col-md-3">
                             <div class="waste-item">
                                 <div class="me-3">
-                                    <i class="bi bi-cup-straw text-primary fs-4"></i>
+                                    <i class="bi bi-recycle fs-4 text-{{ ['primary', 'success', 'warning', 'info'][$index % 4] }}"></i>
                                 </div>
                                 <div class="flex-grow-1">
-                                    <h6 class="mb-0">Plastic Bottles</h6>
-                                    <small class="text-muted">245 items collected</small>
+                                    <h6 class="mb-0">{{ $category['name'] }}</h6>
+                                    <small class="text-muted">{{ number_format($category['weight'], 1) }} kg · {{ $category['count'] }} {{ \Illuminate\Support\Str::plural('entry', $category['count']) }}</small>
                                 </div>
                                 <div class="text-end">
-                                    <span class="badge bg-primary">32%</span>
-                                </div>
-                            </div>
-                            <div class="waste-item">
-                                <div class="me-3">
-                                    <i class="bi bi-cpu text-success fs-4"></i>
-                                </div>
-                                <div class="flex-grow-1">
-                                    <h6 class="mb-0">Electronics</h6>
-                                    <small class="text-muted">189 items collected</small>
-                                </div>
-                                <div class="text-end">
-                                    <span class="badge bg-success">25%</span>
+                                    <span class="badge bg-{{ ['primary', 'success', 'warning', 'info'][$index % 4] }}">{{ $category['share'] }}%</span>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="waste-item">
-                                <div class="me-3">
-                                    <i class="bi bi-newspaper text-warning fs-4"></i>
-                                </div>
-                                <div class="flex-grow-1">
-                                    <h6 class="mb-0">Paper & Cardboard</h6>
-                                    <small class="text-muted">176 items collected</small>
-                                </div>
-                                <div class="text-end">
-                                    <span class="badge bg-warning">23%</span>
-                                </div>
-                            </div>
-                            <div class="waste-item">
-                                <div class="me-3">
-                                    <i class="bi bi-cup text-info fs-4"></i>
-                                </div>
-                                <div class="flex-grow-1">
-                                    <h6 class="mb-0">Glass</h6>
-                                    <small class="text-muted">98 items collected</small>
-                                </div>
-                                <div class="text-end">
-                                    <span class="badge bg-info">13%</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="waste-item">
-                                <div class="me-3">
-                                    <i class="bi bi-bag text-danger fs-4"></i>
-                                </div>
-                                <div class="flex-grow-1">
-                                    <h6 class="mb-0">Textiles</h6>
-                                    <small class="text-muted">47 items collected</small>
-                                </div>
-                                <div class="text-end">
-                                    <span class="badge bg-danger">6%</span>
-                                </div>
-                            </div>
-                            <div class="text-center mt-3">
-                                <a href="#" class="btn btn-outline-primary">View All Items</a>
-                            </div>
+                        @endforeach
+                        <div class="col-md-3 text-md-end">
+                            <a href="{{ route('wastes.index') }}" class="btn btn-outline-primary">View All Items</a>
                         </div>
                     </div>
+                    @endif
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+<script src="{{ asset('vendor/chart.js/chart.umd.js') }}"></script>
+@if(!file_exists(public_path('vendor/chart.js/chart.umd.js')))
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+@endif
 <script>
-    const sidebar = document.getElementById('sidebar');
-    const mainContent = document.getElementById('mainContent');
-    const toggleSidebarBtn = document.getElementById('toggleSidebar');
+    document.addEventListener('DOMContentLoaded', function () {
+        const trendData = @json($trendChart);
+        const distributionData = @json($distributionChart);
+        const trendEmpty = document.getElementById('trendEmpty');
+        const distributionEmpty = document.getElementById('distributionEmpty');
 
-    toggleSidebarBtn.addEventListener('click', () => {
-        sidebar.classList.toggle('collapsed');
-        mainContent.classList.toggle('collapsed');
-    });
+        if (typeof Chart === 'undefined') {
+            ['trendChart', 'distributionChart'].forEach(id => {
+                const canvas = document.getElementById(id);
+                canvas.style.display = 'none';
+                const notice = document.createElement('div');
+                notice.className = 'chart-empty';
+                notice.innerHTML = '<i class="bi bi-bar-chart"></i><p class="mb-0 mt-2">Charts could not be loaded.</p>';
+                canvas.parentElement.appendChild(notice);
+            });
+            return;
+        }
 
-    function toggleSubmenu(e) {
-        e.preventDefault();
-        const parent = e.target.closest('.nav-item');
-        parent.classList.toggle('show');
-    }
-
-    // Charts initialization
-    document.addEventListener('DOMContentLoaded', function() {
-        // Trend Chart
-        const trendCtx = document.getElementById('trendChart').getContext('2d');
-        const trendChart = new Chart(trendCtx, {
-            type: 'line',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-                datasets: [
-                    {
-                        label: 'Plastic Waste',
-                        data: [65, 59, 80, 81, 56, 55, 40, 75],
-                        borderColor: '#0d6efd',
-                        backgroundColor: 'rgba(13, 110, 253, 0.1)',
+        if (trendData.datasets.length) {
+            new Chart(document.getElementById('trendChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: trendData.labels,
+                    datasets: trendData.datasets.map(dataset => ({
+                        label: dataset.label,
+                        data: dataset.data,
+                        borderColor: dataset.borderColor,
+                        backgroundColor: dataset.backgroundColor,
                         tension: 0.4,
                         fill: true
-                    },
-                    {
-                        label: 'Electronic Waste',
-                        data: [28, 48, 40, 19, 86, 27, 90, 65],
-                        borderColor: '#198754',
-                        backgroundColor: 'rgba(25, 135, 84, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    },
-                    {
-                        label: 'Paper Waste',
-                        data: [45, 25, 60, 35, 70, 45, 55, 40],
-                        borderColor: '#ffc107',
-                        backgroundColor: 'rgba(255, 193, 7, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    }
+                    }))
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Waste Collected (kg)'
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {position: 'top'}
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {display: true, text: 'Waste Collected (kg)'}
                         }
                     }
                 }
-            }
-        });
+            });
+        } else if (trendEmpty) {
+            document.getElementById('trendChart').style.display = 'none';
+        }
 
-        // Distribution Chart
-        const distributionCtx = document.getElementById('distributionChart').getContext('2d');
-        const distributionChart = new Chart(distributionCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Plastic', 'Electronics', 'Paper', 'Glass', 'Textiles', 'Other'],
-                datasets: [{
-                    data: [32, 25, 23, 13, 6, 1],
-                    backgroundColor: [
-                        '#0d6efd',
-                        '#198754',
-                        '#ffc107',
-                        '#0dcaf0',
-                        '#dc3545',
-                        '#6c757d'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
+        if (distributionData.data.length) {
+            new Chart(document.getElementById('distributionChart').getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: distributionData.labels,
+                    datasets: [{
+                        data: distributionData.data,
+                        backgroundColor: distributionData.colors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {position: 'bottom'}
                     }
                 }
-            }
-        });
+            });
+        } else if (distributionEmpty) {
+            document.getElementById('distributionChart').style.display = 'none';
+        }
     });
 </script>
 @endsection

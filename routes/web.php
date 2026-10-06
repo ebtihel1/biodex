@@ -24,6 +24,7 @@ use App\Http\Controllers\Backoffice\ProductController;
 use App\Http\Controllers\Front\ProductFrontController;
 use App\Http\Controllers\AI\CollectionAIController;
 use App\Http\Controllers\Campaign\CampaignController;
+use App\Http\Controllers\Campaign\AIControllerCampaign;
 use App\Http\Controllers\Participants\ParticipationController;
 use App\Http\Controllers\Auth\AuthentifController;
 use App\Http\Controllers\User\UserController;
@@ -118,25 +119,14 @@ Route::middleware(['auth'])->group(function () {
     Route::post('products/{id}/toggle-availability', [ProductController::class, 'toggleAvailability'])
         ->name('products.toggle-availability');
 
-    Route::view('dashboard', 'back.home')
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
-    
     //Dashboard Route
-    Route::get('/back/home', function () {
-    $categories = \App\Models\WasteCategory::all();
-    $wastes = \App\Models\Waste::all();
-    $totalWastes = $wastes->count();
-    $wasteStats = $categories->map(function ($category) use ($wastes, $totalWastes) {
-        $count = $wastes->where('waste_category_id', $category->id)->count();
-        $percentage = $totalWastes > 0 ? ($count / $totalWastes) * 100 : 0;
-        return [
-            'name' => $category->name,
-            'percentage' => round($percentage, 1),
-        ];
-    });
-        return view('back.home', compact('categories', 'wastes', 'wasteStats'));
-    })->middleware(['auth', 'verified'])->name('back.home');
+    Route::get('/back/home', [\App\Http\Controllers\Backoffice\DashboardController::class, 'index'])
+        ->middleware(['auth', 'verified'])
+        ->name('back.home');
+
+    Route::get('dashboard', [\App\Http\Controllers\Backoffice\DashboardController::class, 'index'])
+        ->middleware(['auth', 'verified'])
+        ->name('dashboard');
 
     Route::get('/collection-ai/train/{id}', [CollectionAIController::class, 'train']);
     Route::get('/collection-ai/predict/{id}', [CollectionAIController::class, 'predict']);
@@ -153,16 +143,8 @@ Route::middleware(['auth'])->group(function () {
     // Reservation Routes
     Route::resource('reservations', ReservationController::class);
 
-    Route::view('dashboard', 'dashboard')->name('dashboard');
-
     // Back-end Routes (Back - Prefixed with /back)
     Route::prefix('back')->name('back.')->group(function () {
-        Route::get('home', function () {
-            $totalDonations = \App\Models\Donation::count();
-            $totalOrders = \App\Models\Order::count();
-            $totalReservations = \App\Models\Reservation::count();
-            return view('back.home', compact('totalDonations', 'totalOrders', 'totalReservations'));
-        })->name('home');
         Route::prefix('home')->group(function () {
             // Donations (Back-end)
             Route::get('donations', [DonationController::class, 'index'])->name('donations.index');
@@ -192,13 +174,13 @@ Route::middleware(['auth'])->group(function () {
        
         });
     });
-    Route::get('dashboard', function () {
-        return redirect()->route('back.home');
-    })->name('dashboard');
 
 
 //frontoffice campaigns routes
 Route::get('/campaignsFront', [CampaignController::class, 'frontIndex'])->name('campaigns.front');
+
+// Route IA du module Campagne (service Flask GPT-2 sur le port 5003)
+Route::get('/ai/campaign/ask', [AIControllerCampaign::class, 'askAI'])->name('ai.campaign.ask');
 
 // Frontoffice Waste Category Routes
 Route::get('/categories', [FrontWasteCategoryController::class, 'index'])->name('front.waste-categories.index');
@@ -240,25 +222,8 @@ Route::get('/shop/products/{id}', [ProductFrontController::class, 'show'])->name
 
 Route::view('/contact', 'front.contact');
 
-Route::get('/dashbored/collectionpoints', action: [CollectionPointController::class, 'index'])->name('back.home');
+Route::get('/dashbored/collectionpoints', action: [CollectionPointController::class, 'index'])->name('back.collectionpoints.overview');
 Route::resource('collectionpoints', CollectionPointController::class);
-
-Route::get('/biodex/collectionpoints', [CollectionPointFrontController::class, 'index'])->name('front.collectionpoints.index');
-Route::get('/biodex/collectionpoints/{id}', [CollectionPointFrontController::class, 'show'])->name('front.collectionpoints.show');
-
-// Route pour la page de gestion des campagnes dans le back-office
-Route::get('/back/campaigns', function () {
-    return view('back.campaign.campaigns');
-})->name('back.campaigns');
-
-// Routes RESTful pour l'API des campagnes
-Route::resource('campaigns', CampaignController::class);
-
-//Profil
-Route::get('/profile', function () {
-    $user = Auth::user();
-    return view('front.profil.profile', compact('user'));
-})->middleware('auth')->name('profile.view');
 
 //Users Routes
 Route::prefix('users')->group(function () {
@@ -303,16 +268,31 @@ Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleGoogleC
 
 Route::post('/logout', [AuthentifController::class, 'logout'])->name('logout');
 
-Route::get('/dashboard', function() {
-    return view('dashboard');
-})->middleware('auth');
-
 
 Route::view('/recycling', 'front.recycling');
-Route::view('/about', 'front.about');
+Route::get('/about', function () {
+    $count = function (string $table): int {
+        try {
+            return \Illuminate\Support\Facades\DB::table($table)->count();
+        } catch (\Throwable $e) {
+            return 0;
+        }
+    };
+
+    return view('front.about', [
+        'stats' => [
+            ['icon' => 'people-fill', 'label' => 'Registered members', 'value' => $count('users')],
+            ['icon' => 'geo-alt-fill', 'label' => 'Collection points', 'value' => $count('collection_points')],
+            ['icon' => 'megaphone-fill', 'label' => 'Campaigns launched', 'value' => $count('campaigns')],
+            ['icon' => 'bag-check-fill', 'label' => 'Eco-products listed', 'value' => $count('products')],
+            ['icon' => 'recycle', 'label' => 'Waste streams tracked', 'value' => $count('wastes')],
+            ['icon' => 'hand-thumbs-up-fill', 'label' => 'Community participations', 'value' => $count('participations')],
+        ],
+    ]);
+});
 Route::view('/contact', 'front.contact');
 
-Route::get('/dashbored/collectionpoints', action: [CollectionPointController::class, 'index'])->name('back.home');
+Route::get('/dashbored/collectionpoints', action: [CollectionPointController::class, 'index'])->name('back.collectionpoints.overview');
 Route::resource('collectionpoints', CollectionPointController::class);
 
 Route::get('/biodex/collectionpoints', [CollectionPointFrontController::class, 'index'])->name('front.collectionpoints.index');

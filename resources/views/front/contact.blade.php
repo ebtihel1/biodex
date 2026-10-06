@@ -1,5 +1,7 @@
 @extends('front.layout')
 
+@section('title', 'Contact')
+
 @section('content')
 <style>
     .contact-hero {

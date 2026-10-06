@@ -12,6 +12,31 @@ class RecyclingAIController extends Controller
     private $aiServiceUrl = 'http://localhost:5002';
 
     /**
+     * Normalise une map clé/valeur en objet JSON (le service exige un objet,
+     * un tableau PHP vide serait sérialisé en [] et rejeté).
+     */
+    private function asObject($value)
+    {
+        return is_array($value) ? (object) $value : (object) [];
+    }
+
+    /**
+     * Réponse normalisée quand le service IA répond avec une erreur.
+     * On propage le message du service (4xx) pour ne pas masquer une
+     * validation derrière un "service indisponible" trompeur.
+     */
+    private function serviceError($response, $fallbackError)
+    {
+        $status = $response->status();
+        $error = $response->json('error');
+
+        return response()->json([
+            'success' => false,
+            'error' => is_string($error) && $error !== '' ? $error : $fallbackError,
+        ], $status >= 400 && $status < 500 ? $status : 503);
+    }
+
+    /**
      * Classifier un déchet avec l'IA
      */
     public function classifyWaste(Request $request)
@@ -27,10 +52,7 @@ class RecyclingAIController extends Controller
                 return response()->json($response->json());
             }
 
-            return response()->json([
-                'success' => false,
-                'error' => 'Service IA indisponible'
-            ], 503);
+            return $this->serviceError($response, 'Service IA indisponible');
 
         } catch (\Exception $e) {
             Log::error('Erreur classification IA: ' . $e->getMessage());
@@ -58,10 +80,7 @@ class RecyclingAIController extends Controller
                 return response()->json($response->json());
             }
 
-            return response()->json([
-                'success' => false,
-                'error' => 'Service IA indisponible'
-            ], 503);
+            return $this->serviceError($response, 'Service IA indisponible');
 
         } catch (\Exception $e) {
             Log::error('Erreur prédiction qualité IA: ' . $e->getMessage());
@@ -90,10 +109,7 @@ class RecyclingAIController extends Controller
                 return response()->json($response->json());
             }
 
-            return response()->json([
-                'success' => false,
-                'error' => 'Service IA indisponible'
-            ], 503);
+            return $this->serviceError($response, 'Service IA indisponible');
 
         } catch (\Exception $e) {
             Log::error('Erreur estimation prix IA: ' . $e->getMessage());
@@ -114,17 +130,14 @@ class RecyclingAIController extends Controller
                 'product_name' => $request->input('product_name'),
                 'source_material' => $request->input('source_material'),
                 'recycling_method' => $request->input('recycling_method'),
-                'specifications' => $request->input('specifications', [])
+                'specifications' => $this->asObject($request->input('specifications', []))
             ]);
 
             if ($response->successful()) {
                 return response()->json($response->json());
             }
 
-            return response()->json([
-                'success' => false,
-                'error' => 'Service IA indisponible'
-            ], 503);
+            return $this->serviceError($response, 'Service IA indisponible');
 
         } catch (\Exception $e) {
             Log::error('Erreur génération description IA: ' . $e->getMessage());
@@ -150,10 +163,7 @@ class RecyclingAIController extends Controller
                 return response()->json($response->json());
             }
 
-            return response()->json([
-                'success' => false,
-                'error' => 'Service IA indisponible'
-            ], 503);
+            return $this->serviceError($response, 'Service IA indisponible');
 
         } catch (\Exception $e) {
             Log::error('Erreur optimisation processus IA: ' . $e->getMessage());

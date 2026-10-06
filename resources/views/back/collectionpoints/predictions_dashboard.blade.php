@@ -398,6 +398,15 @@
         return ({normal: 'ai-status-normal', almost_full: 'ai-status-almost', full: 'ai-status-full'})[status] || 'ai-status-unknown';
     }
 
+    function normalizeStatus(status) {
+        return String(status ?? '').trim().replace(/\s+/g, '_').toLowerCase() || 'unknown';
+    }
+
+    function parseRatio(value) {
+        const parsed = Number.parseFloat(String(value ?? '').replace('%', ''));
+        return Number.isFinite(parsed) ? parsed : null;
+    }
+
     function setCellText(element, text) {
         element.replaceChildren(document.createTextNode(text));
     }

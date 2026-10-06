@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Biodex Dashboard - {{ $title ?? 'Admin' }}</title>
+    <title>Biodex — {{ trim($__env->yieldContent('title', $title ?? 'Home')) }}</title>
 
     <!-- Bootstrap + Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -102,41 +102,28 @@
             box-shadow: 0 3px 10px rgba(0,0,0,0.1);
         }
     </style>
+    @stack('head')
 </head>
 <body>
 
-@extends('front.navbar')
+@include('front.navbar')
 
-
+{{-- Pages can override the default banner by defining a `hero` section --}}
+@hasSection('hero')
+    @yield('hero')
+@else
     <section class="hero-header">
-    <div class="hero-content text-start">
-        <h1>The <span>Biodex</span> Platform for a Cleaner Future</h1>
-        <p>
-            Biodex connects citizens, recyclers, and companies to turn waste into new opportunities — 
-            for people, planet, and progress 🌍.
-        </p>
-        <a href="{{ url('/register') }}" class="btn btn-success me-2">Join Now</a>
-        <a href="{{ route('front.products.index') }}" class="btn btn-outline-light">Explore Products</a>
-    </div>
-    </section>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a href="{{ url('/') }}" class="nav-link {{ request()->is('/') ? 'active' : '' }}">Home</a></li>
-                    <li class="nav-item"><a href="{{ route('front.products.index') }}" class="nav-link {{ request()->routeIs('front.products.*') || request()->is('shop/products*') ? 'active' : '' }}">Products</a></li>
-                    <li class="nav-item"><a href="{{ url('/biodex/collectionpoints') }}" class="nav-link {{ request()->is('biodex/collectionpoints*') ? 'active' : '' }}">Points de collecte</a></li>
-                    <li class="nav-item"><a href="{{ route('front.wastes.index') }}" class="nav-link {{ request()->routeIs('front.wastes.*') ? 'active' : '' }}">Wastes</a></li>
-                    <li class="nav-item"><a href="{{ url('/waste-categories') }}" class="nav-link {{ request()->is('waste-categories*') ? 'active' : '' }}">Waste Categories</a></li>
-
-                    <li class="nav-item"><a href="{{ route('front.donations.index') }}" class="nav-link {{ request()->routeIs('front.donations.*') ? 'active' : '' }}">Donations</a></li>
-                    <li class="nav-item"><a href="{{ route('front.orders.index') }}" class="nav-link {{ request()->routeIs('front.orders.*') ? 'active' : '' }}">Orders</a></li>
-                    <li class="nav-item"><a href="{{ route('front.reservations.index') }}" class="nav-link {{ request()->routeIs('front.reservations.*') ? 'active' : '' }}">Reservations</a></li>
-                    <li class="nav-item"><a href="{{ url('/contact') }}" class="nav-link {{ request()->is('contact') ? 'active' : '' }}">Contact</a></li>
-                </ul>
-            </div>
+        <div class="hero-content text-start">
+            <h1>The <span>Biodex</span> Platform for a Cleaner Future</h1>
+            <p>
+                Biodex connects citizens, recyclers, and companies to turn waste into new opportunities —
+                for people, planet, and progress 🌍.
+            </p>
+            <a href="{{ url('/register') }}" class="btn btn-success me-2">Join Now</a>
+            <a href="{{ route('front.products.index') }}" class="btn btn-outline-light">Explore Products</a>
         </div>
-    </nav>
-
-
+    </section>
+@endif
 
     <!-- Main content -->
     <main class="container-fluid py-5">

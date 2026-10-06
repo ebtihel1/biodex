@@ -1,9 +1,108 @@
-@extends('front.layout')
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biodex — About</title>
 
-@section('title', 'About')
+    <!-- Bootstrap + Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 
-@push('head')
-<meta name="csrf-token" content="{{ csrf_token() }}">
+    <style>
+        body {
+            margin: 0;
+            font-family: system-ui, sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* NAVBAR transparente au début */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            transition: background-color 0.4s ease, box-shadow 0.3s ease;
+            background-color: transparent !important;
+            z-index: 1000;
+        }
+
+        /* Quand on scrolle, elle devient verte */
+        .navbar.scrolled {
+            background-color: #198754 !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            color: #fff !important;
+        }
+
+        .nav-link {
+            color: #fff !important;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link:hover {
+            text-decoration: underline;
+            color: #a7f3d0 !important;
+        }
+
+
+        .hero-header {
+    height: 80vh;
+    background: url("http://localhost/images/Earth.png") no-repeat center center/cover;
+    position: relative;
+    display: flex;
+    align-items: center;
+    /* ↓ On aligne le contenu à gauche */
+    justify-content: flex-start;
+    color: white;
+    padding-left: 100px; /* décale le texte à peu près au niveau du logo */
+}
+
+.hero-header::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 600px; /* limite la largeur pour une belle mise en page */
+}
+
+.hero-content h1 {
+    font-size: 2.8rem;
+    font-weight: bold;
+}
+
+.hero-content span {
+    color: #a7f3d0; /* vert clair accentué */
+}
+       
+     
+
+        main {
+            background: linear-gradient(120deg, #f8fff8, #f5fff2);
+            padding-top: 80px; /* espace sous navbar */
+        }
+
+        footer {
+            background-color: #198754;
+            color: #fff;
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+    </style>
+    <meta name="csrf-token" content="">
 <style>
     /* =========================================================
        Biodex — About page (futuristic ecological)
@@ -927,10 +1026,92 @@
     }
 </style>
 <noscript><style>.ab-reveal { opacity: 1 !important; transform: none !important; }</style></noscript>
-@endpush
+</head>
+<body>
 
-@section('hero')
-<section class="ab-hero">
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand d-flex align-items-center bg-white rounded-3 px-2 py-1" href="http://localhost">
+    <img src="http://localhost/images/biodex-logo.png" alt="Biodex" height="32">
+</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a href="http://localhost/biodex" class="nav-link active">
+                        <i class="bi bi-house-door me-1"></i>Home
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="http://localhost/shop/products" class="nav-link ">
+                        <i class="bi bi-bag-check me-1"></i>Products
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="http://localhost/biodex/collectionpoints" class="nav-link ">
+                        <i class="bi bi-geo-alt me-1"></i>collectionpoints
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="http://localhost/campaignsFront" class="nav-link ">
+                        <i class="bi bi-megaphone me-1"></i>Campaigns
+                    </a>
+                </li>
+
+                <!-- Nouveau lien Waste Categories -->
+                <li class="nav-item">
+                    <a href="http://localhost/categories" class="nav-link ">
+                        <i class="bi bi-grid-3x3-gap me-1"></i>Waste Categories
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="http://localhost/biodex/donations" class="nav-link ">
+                        <i class="bi bi-heart-fill me-1"></i>Donations
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="http://localhost/biodex/orders" class="nav-link ">
+                        <i class="bi bi-cart me-1"></i>Orders
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="http://localhost/biodex/reservations" class="nav-link ">
+                        <i class="bi bi-calendar-event me-1"></i>Reservations
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="http://localhost/about" class="nav-link ">
+                        <i class="bi bi-info-circle me-1"></i>About
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="http://localhost/contact" class="nav-link ">
+                        <i class="bi bi-envelope me-1"></i>Contact
+                    </a>
+                </li>
+
+                   <li class="nav-item">
+        <a href="http://localhost/login" class="nav-link text-light">
+            <i class="bi bi-box-arrow-in-right me-1"></i>Login
+        </a>
+    </li>
+
+            </ul>
+        </div>
+    </div>
+</nav>
+
+    <section class="ab-hero">
     <div class="container">
         <div class="ab-hero__inner">
             <p class="ab-eyebrow">About Biodex</p>
@@ -949,10 +1130,10 @@
         </div>
     </div>
 </section>
-@endsection
 
-@section('content')
-<div class="ab-shell">
+    <!-- Main content -->
+    <main class="container-fluid py-5">
+        <div class="ab-shell">
     <div class="ab-orb ab-orb--a"></div>
     <div class="ab-orb ab-orb--b"></div>
 
@@ -977,7 +1158,7 @@
                 </div>
 
                 <div class="ab-frame ab-reveal" style="--d: 120ms">
-                    <img src="{{ asset('images/EarthDayBanner.jpg') }}" alt="Biodex mission">
+                    <img src="http://localhost/images/EarthDayBanner.jpg" alt="Biodex mission">
                     <span class="ab-frame__tag"><i class="bi bi-leaf-fill"></i> People · planet · progress</span>
                 </div>
             </div>
@@ -1022,14 +1203,37 @@
             </div>
 
             <div class="ab-stats">
-                @foreach ($stats as $i => $stat)
-                <div class="ab-stat ab-reveal" style="--d: {{ $i * 70 }}ms">
-                    <i class="bi bi-{{ $stat['icon'] }}"></i>
-                    <span class="ab-stat__n" data-count="{{ (int) $stat['value'] }}">0</span>
-                    <span class="ab-stat__l">{{ $stat['label'] }}</span>
+                                <div class="ab-stat ab-reveal" style="--d: 0ms">
+                    <i class="bi bi-bi-people"></i>
+                    <span class="ab-stat__n" data-count="18">0</span>
+                    <span class="ab-stat__l">Users</span>
                 </div>
-                @endforeach
-            </div>
+                                <div class="ab-stat ab-reveal" style="--d: 70ms">
+                    <i class="bi bi-bi-geo-alt"></i>
+                    <span class="ab-stat__n" data-count="6">0</span>
+                    <span class="ab-stat__l">Points</span>
+                </div>
+                                <div class="ab-stat ab-reveal" style="--d: 140ms">
+                    <i class="bi bi-bi-megaphone"></i>
+                    <span class="ab-stat__n" data-count="7">0</span>
+                    <span class="ab-stat__l">Campaigns</span>
+                </div>
+                                <div class="ab-stat ab-reveal" style="--d: 210ms">
+                    <i class="bi bi-bi-box-seam"></i>
+                    <span class="ab-stat__n" data-count="12">0</span>
+                    <span class="ab-stat__l">Products</span>
+                </div>
+                                <div class="ab-stat ab-reveal" style="--d: 280ms">
+                    <i class="bi bi-bi-recycle"></i>
+                    <span class="ab-stat__n" data-count="11">0</span>
+                    <span class="ab-stat__l">Wastes</span>
+                </div>
+                                <div class="ab-stat ab-reveal" style="--d: 350ms">
+                    <i class="bi bi-bi-check2-circle"></i>
+                    <span class="ab-stat__n" data-count="25">0</span>
+                    <span class="ab-stat__l">Participations</span>
+                </div>
+                            </div>
         </div>
     </section>
 
@@ -1148,7 +1352,7 @@
                 </div>
 
                 <div class="ai-lab__body">
-                    {{-- Classify --}}
+                    
                     <form class="ai-form is-active" data-panel="classify" id="aiClassify">
                         <div class="ai-field">
                             <label for="clsDescription">What are you throwing away?</label>
@@ -1169,7 +1373,7 @@
                         <button type="submit" class="ai-run"><i class="bi bi-stars"></i> Classify with AI</button>
                     </form>
 
-                    {{-- Price --}}
+                    
                     <form class="ai-form" data-panel="price" id="aiPrice">
                         <div class="ai-row">
                             <div class="ai-field">
@@ -1212,7 +1416,7 @@
                         <button type="submit" class="ai-run"><i class="bi bi-currency-exchange"></i> Estimate price</button>
                     </form>
 
-                    {{-- Description --}}
+                    
                     <form class="ai-form" data-panel="write" id="aiWrite">
                         <div class="ai-row">
                             <div class="ai-field">
@@ -1251,8 +1455,8 @@
                 <h2>Ready to make a difference?</h2>
                 <p>Join Biodex and take part in practical actions that protect the environment every day.</p>
                 <div class="ab-cta__actions">
-                    <a href="{{ url('/register') }}" class="btn-glow">Create account <i class="bi bi-arrow-right"></i></a>
-                    <a href="{{ url('/contact') }}" class="btn-ghost">Contact us</a>
+                    <a href="http://localhost/register" class="btn-glow">Create account <i class="bi bi-arrow-right"></i></a>
+                    <a href="http://localhost/contact" class="btn-ghost">Contact us</a>
                 </div>
             </div>
         </div>
@@ -1264,11 +1468,10 @@
     'use strict';
 
     var ROUTES = {
-        health: @json(route('ai.recycling.health')),
-        classify: @json(route('ai.recycling.classify')),
-        price: @json(route('ai.recycling.estimate-price')),
-        write: @json(route('ai.recycling.generate-description'))
-    };
+        health: "http:\/\/localhost\/ai\/recycling\/health",
+        classify: "http:\/\/localhost\/ai\/recycling\/classify-waste",
+        price: "http:\/\/localhost\/ai\/recycling\/estimate-price",
+        write: "http:\/\/localhost\/ai\/recycling\/generate-description"    };
 
     var CSRF = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
 
@@ -1475,16 +1678,7 @@
 
         if (Array.isArray(c.signals) && c.signals.length) {
             html += '<div class="ai-block"><h4>Detected signals</h4><div class="ai-tags">';
-            c.signals.forEach(function (s) {
-                var label;
-                if (s && typeof s === 'object') {
-                    label = s.term ? String(s.term) : JSON.stringify(s);
-                    if (s.source) label += ' · ' + s.source;
-                } else {
-                    label = String(s);
-                }
-                html += '<span>' + esc(label) + '</span>';
-            });
+            c.signals.forEach(function (s) { html += '<span>' + esc(s) + '</span>'; });
             html += '</div></div>';
         }
 
@@ -1596,4 +1790,29 @@
     }, renderWrite);
 })();
 </script>
-@endsection
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        © 2026 Biodex — Together for a Cleaner Future 🌱
+    </footer>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+        // Navbar Scroll Effect
+        document.addEventListener('scroll', function () {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });</script>
+
+
+
+</body>
+
+</html>

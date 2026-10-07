@@ -89,7 +89,15 @@ class CollectionPointController extends Controller
 
     public function predictions()
 {
-    $collectionPoints = \App\Models\CollectionPoint::all();
-    return view('back.collectionpoints.predictions_dashboard', compact('collectionPoints'));
+    $collectionPoints = CollectionPoint::all();
+    $pointLocations = $collectionPoints->mapWithKeys(fn ($p) => [
+        $p->id => [
+            'id' => $p->id,
+            'name' => $p->name,
+            'lat' => (float) $p->latitude,
+            'lon' => (float) $p->longitude,
+        ],
+    ]);
+    return view('back.collectionpoints.predictions_dashboard', compact('collectionPoints', 'pointLocations'));
 }
 }

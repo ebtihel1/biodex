@@ -17,7 +17,9 @@ class Waste extends Model
         'waste_category_id',
         'collection_point_id',
         'image_path',
-        'description'
+        'description',
+        'ai_classification',
+        'ai_confidence',
     ];
 
     protected $casts = [

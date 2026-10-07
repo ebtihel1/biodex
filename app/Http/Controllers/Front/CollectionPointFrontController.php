@@ -16,6 +16,13 @@ class CollectionPointFrontController extends Controller
         ]);
     }
 
+    public function map()
+    {
+        return view('front.collectionpoints.map', [
+            'title' => 'Carte Interactive des Points de Collecte'
+        ]);
+    }
+
     public function show($id)
     {
         $collectionPoint = CollectionPoint::where('status', 'active')->findOrFail($id);

@@ -130,6 +130,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/collection-ai/train/{id}', [CollectionAIController::class, 'train']);
     Route::get('/collection-ai/predict/{id}', [CollectionAIController::class, 'predict']);
+    Route::get('/collection-ai/forecasts', [CollectionAIController::class, 'forecasts'])->name('collection-ai.forecasts');
 
     Route::get('/collectionpoints/predictions', [CollectionPointController::class, 'predictions'])
         ->name('collectionpoints.predictions');
@@ -188,10 +189,14 @@ Route::get('/categories/{id}', [FrontWasteCategoryController::class, 'show'])->n
 
 // Frontoffice Waste Routes
 Route::get('/wastess', [FrontWasteController::class, 'index'])->name('front.wastes.index');
+Route::get('/wastess/create', [FrontWasteController::class, 'create'])->name('front.wastes.create');
+Route::post('/wastess', [FrontWasteController::class, 'store'])->name('front.wastes.store');
 Route::get('/wastess/{id}', [FrontWasteController::class, 'show'])->name('front.wastes.show');       
 
 
 Route::post('/ai/predict', [AIController::class, 'predictWaste'])->name('ai.predict');
+Route::get('/ai/classify', [App\Http\Controllers\AI\ImageClassificationController::class, 'showForm'])->name('ai.classify.form');
+Route::post('/waste/classify', [App\Http\Controllers\AI\ImageClassificationController::class, 'classify'])->name('waste.classify');
 Route::get('/predictwaste', function () {
     return view('predictwaste');
 })->name('predictwaste');
@@ -296,6 +301,7 @@ Route::get('/dashbored/collectionpoints', action: [CollectionPointController::cl
 Route::resource('collectionpoints', CollectionPointController::class);
 
 Route::get('/biodex/collectionpoints', [CollectionPointFrontController::class, 'index'])->name('front.collectionpoints.index');
+Route::get('/biodex/collectionpoints/map', [CollectionPointFrontController::class, 'map'])->name('front.collectionpoints.map');
 Route::get('/biodex/collectionpoints/{id}', [CollectionPointFrontController::class, 'show'])->name('front.collectionpoints.show');
 
 // Route pour la page de gestion des campagnes dans le back-office

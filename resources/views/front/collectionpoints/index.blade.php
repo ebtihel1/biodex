@@ -293,9 +293,14 @@
                     <button class="btn btn-outline-success">Suggest a location</button>
                 </div>
             @else
-                <div class="results-count">
-                    <i class="fas fa-info-circle me-2"></i>
-                    {{ $collectionPoints->count() }} collection point(s) found
+                <div class="results-count d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <span>
+                        <i class="fas fa-info-circle me-2"></i>
+                        {{ $collectionPoints->count() }} collection point(s) found
+                    </span>
+                    <a href="{{ route('front.collectionpoints.map') }}" class="btn btn-success btn-sm">
+                        <i class="fas fa-map-marked-alt me-1"></i> View interactive map
+                    </a>
                 </div>
                 
                 <div class="row">

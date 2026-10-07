@@ -41,4 +41,14 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    'ai_service' => [
+        // Service Flask de classification d'images de déchets (CNN)
+        'url' => env('AI_SERVICE_URL', 'http://127.0.0.1:5000'),
+    ],
+
+    'classify_service' => [
+        // Service Flask de classification d'images de déchets (CNN)
+        'url' => env('CLASSIFY_SERVICE_URL', 'http://127.0.0.1:5004'),
+    ],
+
 ];

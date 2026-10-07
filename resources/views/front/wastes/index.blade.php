@@ -2,7 +2,17 @@
 
 @section('content')
 <div class="container py-5">
-    <h1 class="mb-4 text-center text-success">Waste List</h1>
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+        <h1 class="text-success mb-0">Waste List</h1>
+        <div class="d-flex gap-2">
+            <a href="{{ route('front.wastes.create') }}" class="btn btn-success">
+                <i class="fas fa-plus me-1"></i>Add Waste
+            </a>
+            <a href="{{ route('ai.classify.form') }}" class="btn btn-outline-success">
+                <i class="fas fa-cpu me-1"></i>Classify an image
+            </a>
+        </div>
+    </div>
 
     @if($wastes->isEmpty())
         <div class="empty-state">
@@ -40,6 +50,14 @@
                                 <span class="badge bg-success fs-6">
                                     <i class="fas fa-folder me-1"></i>{{ $waste->category->name ?? 'N/A' }}
                                 </span>
+                                @if($waste->ai_classification)
+                                <span class="badge bg-info text-dark fs-6 ms-1" title="Catégorie détectée par IA (CNN)">
+                                    <i class="fas fa-cpu me-1"></i>{{ $waste->ai_classification }}
+                                    @if($waste->ai_confidence !== null)
+                                        ({{ round($waste->ai_confidence * 100) }}%)
+                                    @endif
+                                </span>
+                                @endif
                             </div>
 
                             <!-- Show Details Button -->
@@ -118,6 +136,20 @@
                                                         {{ $waste->category->name ?? 'N/A' }}
                                                     </span>
                                                 </div>
+
+                                                @if($waste->ai_classification)
+                                                <div class="col-6 mb-2 text-muted">
+                                                    <strong>Category (IA):</strong>
+                                                </div>
+                                                <div class="col-6 mb-2">
+                                                    <span class="badge bg-info text-dark">
+                                                        <i class="fas fa-cpu me-1"></i>{{ $waste->ai_classification }}
+                                                        @if($waste->ai_confidence !== null)
+                                                            ({{ round($waste->ai_confidence * 100) }}%)
+                                                        @endif
+                                                    </span>
+                                                </div>
+                                                @endif
                                             </div>
                                         </div>
 

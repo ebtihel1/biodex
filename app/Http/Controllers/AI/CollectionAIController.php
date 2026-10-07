@@ -14,11 +14,18 @@ class CollectionAIController extends Controller
 {
     // Tableau statique des capacités en kg par point_id
     private $capacities = [
-        16 => 750,  // dar el marsa (en kg)
-        20 => 1000, // le golf (en kg)
-        21 => 600,  // dar el jeld (en kg)
-        22 => 900,  // elmouradi (en kg)
-        23 => 1250, // quatre saisons (en kg)
+        1 => 750,   // Centre de Collecte Tunis Nord (en kg)
+        2 => 600,   // Centre de Collecte Sousse (en kg)
+        3 => 900,   // Point Vert Les Berges du Lac (en kg)
+        4 => 850,   // Déchetterie Charguia (en kg)
+        5 => 650,   // Point de Collecte Nabeul (en kg)
+        6 => 1000,  // Centre de Tri Sfax (en kg)
+        // Identifiants historiques conservés pour compatibilité
+        16 => 750,
+        20 => 1000,
+        21 => 600,
+        22 => 900,
+        23 => 1250,
     ];
 
     public function train($id)
@@ -177,6 +184,62 @@ class CollectionAIController extends Controller
     }
 
     /**
+     * Prévisions compactes de tous les points de collecte (pour la carte interactive).
+     */
+    public function forecasts()
+    {
+        $points = CollectionPoint::query()->orderBy('id')->get();
+
+        $payload = $points->map(function (CollectionPoint $point) {
+            $volumes = $this->dailyVolumes((int) $point->id);
+            $capacity = $this->capacities[$point->id] ?? 1000;
+
+            $base = [
+                'id' => (int) $point->id,
+                'name' => $point->name,
+                'address' => $point->address,
+                'city' => $point->city,
+                'latitude' => (float) $point->latitude,
+                'longitude' => (float) $point->longitude,
+                'status' => $point->status,
+                'capacity_kg' => $capacity,
+                'accepted_categories' => $point->accepted_categories ?? [],
+            ];
+
+            if (count($volumes) < 2) {
+                return $base + [
+                    'predicted_volume_kg' => null,
+                    'ratio_pct' => null,
+                    'level' => 'insufficient',
+                    'forecast_date' => null,
+                    'confidence' => null,
+                    'training_days' => count($volumes),
+                ];
+            }
+
+            $values = array_values($volumes);
+            $recent = array_slice($values, -14);
+            $prediction = array_sum($recent) / count($recent);
+            $ratio = $prediction / $capacity;
+            $coverage = min(1.0, count($values) / 90);
+
+            return $base + [
+                'predicted_volume_kg' => round(max(0, $prediction), 2),
+                'ratio_pct' => round($ratio * 100, 1),
+                'level' => $this->levelFor($ratio),
+                'forecast_date' => now()->addDay()->toDateString(),
+                'confidence' => round(min(0.6, 0.25 + 0.35 * $coverage), 2),
+                'training_days' => count($values),
+            ];
+        });
+
+        return response()->json([
+            'generated_at' => now()->toIso8601String(),
+            'points' => $payload,
+        ]);
+    }
+
+    /**
      * Statut de capacité partagé par toutes les réponses de prévision.
      */
     private function statusFor(float $ratio): string
@@ -244,6 +307,21 @@ class CollectionAIController extends Controller
             'forecast_source' => 'local_database',
             'fallback_reason' => $reason,
         ]);
+    }
+
+    /**
+     * Niveau de remplissage prédit : low / moderate / high.
+     */
+    private function levelFor(float $ratio): string
+    {
+        if ($ratio >= 0.8) {
+            return 'high';
+        }
+        if ($ratio >= 0.5) {
+            return 'moderate';
+        }
+
+        return 'low';
     }
 
     /**

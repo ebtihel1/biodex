@@ -2,6 +2,8 @@
 
 @section('content')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ asset('vendor/leaflet/leaflet.js') }}"></script>
+<link href="{{ asset('vendor/leaflet/leaflet.css') }}" rel="stylesheet">
 <style>
     .collection-ai {
         --ai-ink: #153f3a;
@@ -108,6 +110,66 @@
         position: relative;
         min-height: 270px;
         padding: 1rem;
+    }
+
+    #aiMap {
+        height: 340px;
+        width: 100%;
+        background: #e8ecea;
+        z-index: 0;
+    }
+
+    .ai-map-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1.5fr) minmax(240px, 0.7fr);
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .ai-map-labels {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem 1rem;
+        padding: 0.7rem 1rem;
+        font-size: 0.78rem;
+        color: var(--ai-muted);
+        border-bottom: 1px solid var(--ai-line);
+    }
+
+    .ai-map-labels span {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .map-dot {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        display: inline-block;
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 1px rgba(0,0,0,0.15);
+    }
+
+    .ai-map-summary {
+        padding: 0.85rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+    }
+
+    .ai-map-summary-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.55rem 0.75rem;
+        border: 1px solid var(--ai-line);
+        border-radius: 6px;
+        font-size: 0.82rem;
+    }
+
+    .ai-map-summary-item b {
+        font-size: 0.95rem;
     }
 
     .ai-content-grid {
@@ -324,6 +386,33 @@
         </div>
     </section>
 
+    <div class="ai-map-row">
+        <section class="ai-panel" aria-labelledby="ai-map-title">
+            <div class="ai-panel-header">
+                <div>
+                    <h2 id="ai-map-title">Interactive map of collection points</h2>
+                    <p>Predicted fill level per point — click a marker for details</p>
+                </div>
+            </div>
+            <div class="ai-map-labels">
+                <span><i class="map-dot" style="background:#198754"></i>Normal</span>
+                <span><i class="map-dot" style="background:#d89b28"></i>Almost full</span>
+                <span><i class="map-dot" style="background:#bd4b43"></i>Full</span>
+                <span><i class="map-dot" style="background:#758984"></i>Needs data</span>
+            </div>
+            <div id="aiMap"></div>
+        </section>
+        <aside class="ai-panel" aria-labelledby="ai-map-summary-title">
+            <div class="ai-panel-header">
+                <div>
+                    <h2 id="ai-map-summary-title">Map summary</h2>
+                    <p>Capacity usage status</p>
+                </div>
+            </div>
+            <div id="aiMapSummary" class="ai-map-summary"></div>
+        </aside>
+    </div>
+
     <div class="ai-content-grid">
         <section class="ai-panel" aria-labelledby="points-table-title">
             <div class="ai-panel-header">
@@ -389,6 +478,14 @@
     const spinner = document.getElementById('loadingSpinner');
     let chart;
     const points = new Map();
+    const pointLocations = new Map(@json($pointLocations ?? []));
+
+    let aiMap = null;
+    const mapMarkers = [];
+
+    function levelColor(status) {
+        return ({normal: '#198754', almost_full: '#d89b28', full: '#bd4b43'})[status] || '#758984';
+    }
 
     function statusLabel(status) {
         return ({normal: 'Normal', almost_full: 'Almost full', full: 'Full', insufficient_data: 'Needs data', unknown: 'Unavailable'})[status] || 'Unavailable';
@@ -477,6 +574,68 @@
                 },
             },
         });
+    }
+
+    function initAiMap() {
+        if (aiMap) return;
+        aiMap = L.map('aiMap').setView([35.9, 10.3], 7);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        }).addTo(aiMap);
+    }
+
+    function updateMap() {
+        if (typeof L === 'undefined') return;
+        initAiMap();
+        mapMarkers.forEach(marker => aiMap.removeLayer(marker));
+        mapMarkers.length = 0;
+
+        const latLngs = [];
+        for (const point of points.values()) {
+            const location = pointLocations.get(Number(point.id));
+            if (!location) continue;
+            const at = L.latLng(location.lat, location.lon);
+            latLngs.push(at);
+
+            const volumeText = Number.isFinite(point.volume)
+                ? `${Math.round(point.volume)} kg · ${Number.isFinite(point.ratio) ? Math.round(point.ratio) + '%' : '—'} de capacité`
+                : 'Historique insuffisant';
+
+            const marker = L.circleMarker(at, {
+                radius: point.status === 'full' ? 16 : 13,
+                color: '#fff',
+                weight: 2,
+                fillColor: levelColor(point.status),
+                fillOpacity: 0.85,
+            }).bindPopup(`
+                <strong>${location.name}</strong><br>
+                <span style="color:#68817c;font-size:0.78rem">${volumeText}</span><br>
+                Statut prédit : ${statusLabel(point.status)}
+            `);
+            marker.addTo(aiMap);
+            mapMarkers.push(marker);
+        }
+
+        if (latLngs.length > 1) {
+            aiMap.fitBounds(L.latLngBounds(latLngs).pad(0.15));
+        } else if (latLngs.length === 1) {
+            aiMap.setView(latLngs[0], 13);
+        }
+
+        const summary = document.getElementById('aiMapSummary');
+        const entries = [
+            ['Normal', Array.from(points.values()).filter(p => p.status === 'normal').length, '#198754'],
+            ['Almost full', Array.from(points.values()).filter(p => p.status === 'almost_full').length, '#d89b28'],
+            ['Full', Array.from(points.values()).filter(p => p.status === 'full').length, '#bd4b43'],
+            ['Needs data', Array.from(points.values()).filter(p => p.status === 'insufficient_data').length, '#758984'],
+        ];
+        summary.replaceChildren(...entries.map(([label, count, color]) => {
+            const item = document.createElement('div');
+            item.className = 'ai-map-summary-item';
+            item.innerHTML = `<span><i class="map-dot" style="background:${color}"></i> ${label}</span><b>${count}</b>`;
+            return item;
+        }));
     }
 
     function renderLastCollection(id, value) {
@@ -570,6 +729,7 @@
         updateCounters();
         updatePriorityList();
         updateChart();
+        updateMap();
         document.getElementById('lastUpdateTime').textContent = new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
         refreshButton.disabled = false;
         spinner.classList.add('d-none');

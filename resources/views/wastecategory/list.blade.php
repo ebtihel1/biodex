@@ -4,15 +4,15 @@
 
 @section('content')
 <div class="container-fluid px-0">
-    <!-- En-tête amélioré avec statistiques -->
+    <!-- En-tête avec statistiques -->
     <div class="row mb-4">
         <div class="col-12">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
                 <div class="mb-3 mb-md-0">
                     <h1 class="page-title text-success mb-2">
-                        <i class="bi bi-recycle me-2"></i> Waste Categories
+                        <i class="bi bi-tags me-2"></i> Waste Categories
                     </h1>
-                    <p class="text-muted mb-0">Manage all the waste categories on your platform</p>
+                    <p class="text-muted mb-0">Review, filter and manage waste categories</p>
                 </div>
                 <div class="d-flex flex-wrap gap-2">
                     <a href="{{ route('waste_categories.create') }}" class="btn btn-success shadow-sm fw-medium px-4 py-2">
@@ -22,31 +22,27 @@
             </div>
         </div>
 
-        <!-- Cartes de statistiques améliorées -->
+        <!-- Cartes de statistiques -->
         <div class="col-12">
             <div class="stats-wrapper mb-4">
                 <div class="campaign-stats">
-                    @php
-                        $totalCategories = $categories->count();
-                        $withInstructions = $categories->whereNotNull('recycling_instructions')->count();
-                        $withoutInstructions = $totalCategories - $withInstructions;
-                    @endphp
-
                     <div class="stat-card bg-gradient-primary">
-                        <i class="bi bi-recycle stat-icon"></i>
-                        <div class="stat-number">{{ $totalCategories }}</div>
+                        <i class="bi bi-tags stat-icon"></i>
+                        <div class="stat-number">{{ number_format((int) ($summary->total_count ?? 0)) }}</div>
                         <div class="stat-label">Total Categories</div>
                     </div>
 
                     <div class="stat-card bg-gradient-success">
-                        <i class="bi bi-check-circle-fill stat-icon"></i>
-                        <div class="stat-number">{{ $withInstructions }}</div>
+                        <i class="bi bi-file-text stat-icon"></i>
+                        <div class="stat-number">{{ number_format((int) ($summary->with_instructions_count ?? 0)) }}</div>
                         <div class="stat-label">With Instructions</div>
                     </div>
 
                     <div class="stat-card bg-gradient-warning">
-                        <i class="bi bi-exclamation-circle stat-icon"></i>
-                        <div class="stat-number">{{ $withoutInstructions }}</div>
+                        <i class="bi bi-file-earmark-x stat-icon"></i>
+                        <div class="stat-number">
+                            {{ number_format((int) (($summary->total_count ?? 0) - ($summary->with_instructions_count ?? 0))) }}
+                        </div>
                         <div class="stat-label">Without Instructions</div>
                     </div>
                 </div>
@@ -65,19 +61,57 @@
         </div>
     @endif
 
+    <!-- Barre de filtres -->
+    <div class="card shadow-sm border-0 rounded-3 mb-4">
+        <div class="card-header bg-white py-3 border-bottom">
+            <h5 class="card-title mb-0 text-success fw-medium">
+                <i class="bi bi-funnel me-2"></i> Filter Categories
+            </h5>
+        </div>
+        <div class="card-body">
+            <form action="{{ route('waste_categories.index') }}" method="GET" class="row g-3 align-items-end">
+                <div class="col-12 col-md-8">
+                    <label for="category-search" class="form-label small text-muted fw-medium">Search categories</label>
+                    <input id="category-search" type="search" name="search" value="{{ $search }}" 
+                           class="form-control" placeholder="Search by name, description, or instructions">
+                </div>
+                <div class="col-12 col-md-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-success px-4">
+                        <i class="bi bi-search me-1"></i> Apply
+                    </button>
+                    @if($search !== '')
+                        <a href="{{ route('waste_categories.index') }}" class="btn btn-outline-secondary px-4">
+                            <i class="bi bi-x-circle me-1"></i> Clear
+                        </a>
+                    @endif
+                </div>
+            </form>
+        </div>
+    </div>
+
     @if ($categories->isEmpty())
         <div class="card shadow-sm border-0 rounded-3">
             <div class="card-body text-center py-5">
                 <i class="bi bi-inbox display-4 text-muted mb-3"></i>
-                <h4 class="text-muted mb-3">No categories found</h4>
-                <p class="text-muted mb-4">Start by adding your first waste category</p>
-                <a href="{{ route('waste_categories.create') }}" class="btn btn-success px-4">
-                    <i class="bi bi-plus-circle me-2"></i> Create Category
-                </a>
+                <h4 class="text-muted mb-3">No waste categories found</h4>
+                <p class="text-muted mb-4">
+                    {{ $search !== '' 
+                        ? 'Try changing or clearing your search term.' 
+                        : 'Add a category record to start building your categories list.' }}
+                </p>
+                @if($search === '')
+                    <a href="{{ route('waste_categories.create') }}" class="btn btn-success px-4">
+                        <i class="bi bi-plus-circle me-2"></i> Add Category
+                    </a>
+                @else
+                    <a href="{{ route('waste_categories.index') }}" class="btn btn-outline-secondary px-4">
+                        <i class="bi bi-x-circle me-2"></i> Clear Filters
+                    </a>
+                @endif
             </div>
         </div>
     @else
-        <!-- Tableau amélioré -->
+        <!-- Tableau -->
         <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
             <div class="card-header bg-white py-3 border-bottom">
                 <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
@@ -85,7 +119,7 @@
                         <i class="bi bi-list-ul me-2"></i> Category List
                     </h5>
                     <div class="text-muted small">
-                        Total: {{ $categories->count() }} category(ies)
+                        Total: {{ number_format($categories->total()) }} record(s)
                     </div>
                 </div>
             </div>
@@ -97,31 +131,39 @@
                             <tr>
                                 <th>Name</th>
                                 <th>Description</th>
-                                <th>Instructions</th>
+                                <th>Recycling Instructions</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($categories as $category)
                                 <tr class="text-center">
-                                    <td>{{ $category->name }}</td>
-                                    <td>{{ $category->description }}</td>
+                                    <td class="fw-medium">{{ $category->name }}</td>
                                     <td>
-                                        @if($category->recycling_instructions)
-                                            {{ $category->recycling_instructions }}
-                                        @else
-                                            <span class="">Without Instructions</span>
-                                        @endif
+                                        <small class="text-muted d-block text-truncate" style="max-width: 250px;" title="{{ $category->description }}">
+                                            {{ $category->description ?: 'No description' }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted d-block text-truncate" style="max-width: 250px;" title="{{ $category->recycling_instructions }}">
+                                            {{ $category->recycling_instructions ?: 'No instructions provided' }}
+                                        </small>
                                     </td>
                                     <td>
                                         <div class="d-flex justify-content-center gap-2">
+                                            <!-- View -->
+                                            <a href="{{ route('waste_categories.show', $category->id) }}" 
+                                               class="action-btn action-view" title="View">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
                                             <!-- Edit -->
                                             <a href="{{ route('waste_categories.edit', $category->id) }}" 
                                                class="action-btn action-edit" title="Edit">
                                                 <i class="bi bi-pencil-square"></i>
                                             </a>
                                             <!-- Delete -->
-                                            <form action="{{ route('waste_categories.destroy', $category->id) }}" method="POST" onsubmit="return confirm('Are you sure?')">
+                                            <form action="{{ route('waste_categories.destroy', $category->id) }}" method="POST" 
+                                                  onsubmit="return confirm('Delete this category?')">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="action-btn action-delete" title="Delete">
@@ -137,18 +179,31 @@
                 </div>
             </div>
         </div>
+
+        <!-- Pagination -->
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 mt-4 mb-4 px-1">
+            <span class="text-muted small">
+                <i class="bi bi-info-circle me-1"></i>
+                Showing <strong>{{ $categories->firstItem() ?? 0 }}</strong>–<strong>{{ $categories->lastItem() ?? 0 }}</strong> of <strong>{{ number_format($categories->total()) }}</strong> records
+            </span>
+            <div class="pagination-wrapper">
+                {{ $categories->links('pagination::bootstrap-5') }}
+            </div>
+        </div>
     @endif
 </div>
 
-<!-- Styles réutilisables depuis la page Points de Collecte -->
+<!-- Styles -->
 <style>
 .page-title { font-weight: 600; font-size: 1.75rem; }
 .card { border: none; transition: transform 0.2s ease-in-out; }
 .card:hover { transform: translateY(-1px); }
 .stat-card:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important; }
-.table th { border-bottom: 2px solid #198754; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding: 1rem 0.75rem; }
+.table th { border-bottom: 2px solid #198754; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding: 1rem 0.75rem; font-size: 0.75rem; }
 .table tbody tr:hover { background-color: rgba(25, 135, 84, 0.04); box-shadow: inset 0 0 0 1px rgba(25, 135, 84, 0.1); }
 .action-btn { display:inline-flex; align-items:center; justify-content:center; width:2.5rem; height:2.5rem; border-radius:8px; border:none; text-decoration:none; transition:all 0.3s ease; position:relative; overflow:hidden; color:#fff!important; }
+.action-view { background: linear-gradient(135deg,#0dcaf0,#0aa2c0); }
+.action-view:hover { background: linear-gradient(135deg,#0aa2c0,#087990); }
 .action-edit { background: linear-gradient(135deg,#ffc107,#e0a800); }
 .action-edit:hover { background: linear-gradient(135deg,#e0a800,#c69500); }
 .action-delete { background: linear-gradient(135deg,#dc3545,#c82333); }
@@ -219,22 +274,6 @@
     margin-bottom: 2.5rem;
 }
 
-/* Smooth Animation */
-.fade-in-up {
-    animation: fadeInUp 0.6s ease-out;
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(25px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
 /* Gradient backgrounds for cards */
 .bg-gradient-primary {
     background: linear-gradient(135deg, #f8e3a3ff, #edd58bff) !important;
@@ -245,7 +284,51 @@
 }
 
 .bg-gradient-warning {
-    background: linear-gradient(135deg,  #f8e3a3ff, #edd58bff) !important;
+    background: linear-gradient(135deg, #f8e3a3ff, #edd58bff) !important;
+}
+
+/* Pagination Styles */
+.pagination-wrapper .pagination {
+    margin: 0;
+    gap: 0.35rem;
+}
+
+.pagination-wrapper .page-link {
+    border: 1px solid rgba(25, 135, 84, 0.15);
+    border-radius: 8px !important;
+    color: #198754;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 0.45rem 0.75rem;
+    transition: all 0.2s ease;
+    min-width: 38px;
+    text-align: center;
+}
+
+.pagination-wrapper .page-link:hover {
+    background: linear-gradient(135deg, #f8e3a3, #edd58b);
+    border-color: #e8c471;
+    color: #1b4332;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(25, 135, 84, 0.15);
+}
+
+.pagination-wrapper .page-item.active .page-link {
+    background: linear-gradient(135deg, #198754, #146c43);
+    border-color: #198754;
+    color: #fff;
+    box-shadow: 0 3px 10px rgba(25, 135, 84, 0.3);
+}
+
+.pagination-wrapper .page-item.disabled .page-link {
+    background: #f8f9fa;
+    border-color: #e9ecef;
+    color: #adb5bd;
+}
+
+.pagination-wrapper .page-item:first-child .page-link,
+.pagination-wrapper .page-item:last-child .page-link {
+    border-radius: 8px !important;
 }
 
 /* Responsive */
@@ -253,9 +336,13 @@
     .stats-wrapper {
         padding: 1rem;
     }
-    .btn-add {
-        width: 100%;
-        margin-top: 1rem;
+}
+
+@media (max-width: 576px) {
+    .pagination-wrapper .page-link {
+        padding: 0.35rem 0.55rem;
+        font-size: 0.75rem;
+        min-width: 32px;
     }
 }
 </style>

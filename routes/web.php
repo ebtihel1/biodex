@@ -228,6 +228,9 @@ Route::get('/shop/products/{id}', [ProductFrontController::class, 'show'])->name
 Route::view('/contact', 'front.contact');
 
 Route::get('/dashbored/collectionpoints', action: [CollectionPointController::class, 'index'])->name('back.collectionpoints.overview');
+Route::get('collectionpoints/export/csv', [CollectionPointController::class, 'exportCsv'])->name('collectionpoints.export.csv');
+Route::get('collectionpoints/export/pdf', [CollectionPointController::class, 'exportPdf'])->name('collectionpoints.export.pdf');
+Route::post('collectionpoints/import', [CollectionPointController::class, 'importCsv'])->name('collectionpoints.import');
 Route::resource('collectionpoints', CollectionPointController::class);
 
 //Users Routes

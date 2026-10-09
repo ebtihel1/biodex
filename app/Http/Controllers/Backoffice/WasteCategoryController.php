@@ -4,17 +4,35 @@ namespace App\Http\Controllers\Backoffice;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\WasteCategory; 
+use App\Models\WasteCategory;
 
 class WasteCategoryController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $categories = WasteCategory::all();
-        return view('wastecategory.list', compact('categories'));
+        $search = trim((string) $request->input('search', ''));
+
+        $query = WasteCategory::query();
+
+        if ($search !== '') {
+            $query->where(function ($filter) use ($search) {
+                $filter->where('name', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('recycling_instructions', 'like', "%{$search}%");
+            });
+        }
+
+        $categories = $query->latest()->paginate(10)->withQueryString();
+
+        $summary = WasteCategory::query()
+            ->selectRaw('COUNT(*) as total_count')
+            ->selectRaw("SUM(CASE WHEN recycling_instructions IS NOT NULL AND recycling_instructions != '' THEN 1 ELSE 0 END) as with_instructions_count")
+            ->first();
+
+        return view('wastecategory.list', compact('categories', 'summary', 'search'));
     }
 
     /**
@@ -32,47 +50,36 @@ class WasteCategoryController extends Controller
     {
         $validated = $request->validate([
             'name' => [
-                'required', 
-                'min:5',
-                'max:10', 
-                'regex:/^[a-zA-Z\s\-]+$/',
-                'unique:waste_categories,name'
+                'required',
+                'string',
+                'max:100',
+                'unique:waste_categories,name',
+                'regex:/^[a-zA-Z0-9\s\-]+$/'
             ],
             'description' => [
-                'required', 
-                'min:5',
-                'max:10', 
-                'regex:/^[a-zA-Z\s\-\.,!?()]+$/'
+                'nullable',
+                'string',
+                'max:500',
             ],
             'recycling_instructions' => [
-                'nullable', 
-                'min:5',
-                'max:100',
-                'regex:/^[a-zA-Z\s\-\.,!?()]*$/' 
+                'nullable',
+                'string',
+                'max:1000',
             ],
         ], [
             'name.required' => 'Category name is required.',
-            'name.min' => 'Name must be at least 5 characters.',
-            'name.max' => 'Name must not exceed 10 characters.',
-            'name.regex' => 'Name can only contain letters, spaces and hyphens. Numbers are not allowed.',
-            'name.unique' => 'This category already exists.',
-            
-            'description.required' => 'Description is required.',
-            'description.min' => 'Description must be at least 5 characters.',
-            'description.max' => 'Description must not exceed 10 characters.',
-            'description.regex' => 'Description can only contain letters, spaces and the following special characters: - . , ! ? ( ). Numbers are not allowed.',
-            
-            'recycling_instructions.min' => 'Instructions must be at least 5 characters.',
-            'recycling_instructions.max' => 'Instructions must not exceed 100 characters.',
-            'recycling_instructions.regex' => 'Instructions can only contain letters, spaces and the following special characters: - . , ! ? ( ). Numbers are not allowed.',
+            'name.max' => 'Name must not exceed 100 characters.',
+            'name.unique' => 'This category name already exists.',
+            'name.regex' => 'Name can only contain letters, numbers, spaces, and hyphens.',
+            'description.max' => 'Description must not exceed 500 characters.',
+            'recycling_instructions.max' => 'Instructions must not exceed 1000 characters.',
         ]);
 
-        // Additional validation to prevent empty strings and numbers
-        $this->validateNoEmptyAndNoNumbers($request);
+        $this->validateNoEmptyStrings($request);
 
         WasteCategory::create($validated);
 
-        return redirect()->route('waste_categories.index')->with('success', 'Category created successfully');
+        return redirect()->route('waste_categories.index')->with('success', 'Category created successfully.');
     }
 
     /**
@@ -81,7 +88,7 @@ class WasteCategoryController extends Controller
     public function show(string $id)
     {
         $category = WasteCategory::findOrFail($id);
-        return view('waste_categories.show', compact('category'));
+        return view('wastecategory.show', compact('category'));
     }
 
     /**
@@ -102,48 +109,36 @@ class WasteCategoryController extends Controller
 
         $validated = $request->validate([
             'name' => [
-                'required', 
-                'min:5',
-                'max:10', 
-                'regex:/^[a-zA-Z\s\-]+$/',
-                'unique:waste_categories,name,' . $id
+                'required',
+                'string',
+                'max:100',
+                'unique:waste_categories,name,' . $id,
+                'regex:/^[a-zA-Z0-9\s\-]+$/'
             ],
             'description' => [
-                'required', 
-                'min:5',
-                'max:10', 
-                'regex:/^[a-zA-Z\s\-\.,!?()]+$/'
+                'nullable',
+                'string',
+                'max:500',
             ],
             'recycling_instructions' => [
-                'nullable', // CORRECTION : Changer 'required' en 'nullable'
-                'min:5',
-                'max:100',
-                'regex:/^[a-zA-Z\s\-\.,!?()]*$/' // CORRECTION : * au lieu de +
+                'nullable',
+                'string',
+                'max:1000',
             ],
         ], [
             'name.required' => 'Category name is required.',
-            'name.min' => 'Name must be at least 5 characters.',
-            'name.max' => 'Name must not exceed 10 characters.',
-            'name.regex' => 'Name can only contain letters, spaces and hyphens. Numbers are not allowed.',
-            'name.unique' => 'This category already exists.',
-            
-            'description.required' => 'Description is required.',
-            'description.min' => 'Description must be at least 5 characters.',
-            'description.max' => 'Description must not exceed 10 characters.',
-            'description.regex' => 'Description can only contain letters, spaces and the following special characters: - . , ! ? ( ). Numbers are not allowed.',
-            
-            // CORRECTION : Retirer le message pour 'recycling_instructions.required'
-            'recycling_instructions.min' => 'Instructions must be at least 5 characters.',
-            'recycling_instructions.max' => 'Instructions must not exceed 100 characters.',
-            'recycling_instructions.regex' => 'Instructions can only contain letters, spaces and the following special characters: - . , ! ? ( ). Numbers are not allowed.',
+            'name.max' => 'Name must not exceed 100 characters.',
+            'name.unique' => 'This category name already exists.',
+            'name.regex' => 'Name can only contain letters, numbers, spaces, and hyphens.',
+            'description.max' => 'Description must not exceed 500 characters.',
+            'recycling_instructions.max' => 'Instructions must not exceed 1000 characters.',
         ]);
 
-        // Additional validation to prevent empty strings and numbers
-        $this->validateNoEmptyAndNoNumbers($request);
+        $this->validateNoEmptyStrings($request);
 
         $category->update($validated);
 
-        return redirect()->route('waste_categories.index')->with('success', 'Category updated successfully');
+        return redirect()->route('waste_categories.index')->with('success', 'Category updated successfully.');
     }
 
     /**
@@ -153,64 +148,21 @@ class WasteCategoryController extends Controller
     {
         $category = WasteCategory::findOrFail($id);
         $category->delete();
-        return redirect()->route('waste_categories.index')->with('success', 'Category deleted successfully');
+
+        return redirect()->route('waste_categories.index')->with('success', 'Category deleted successfully.');
     }
 
     /**
-     * Additional validation to prevent empty strings and numbers in all fields
+     * Additional validation to prevent empty strings containing only spaces.
      */
-    private function validateNoEmptyAndNoNumbers(Request $request)
+    private function validateNoEmptyStrings(Request $request)
     {
-        $fields = [
-            'name' => 'Name',
-            'description' => 'Description', 
-        ];
-        
-        foreach ($fields as $field => $fieldName) {
-            // Check for empty strings (only spaces)
-            if (trim($request->$field) === '') {
-                throw \Illuminate\Validation\ValidationException::withMessages([
-                    $field => "$fieldName cannot be empty or contain only spaces."
-                ]);
-            }
-            
-            // Check for any numbers in all fields
-            if (preg_match('/\d/', $request->$field)) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
-                    $field => "$fieldName cannot contain numbers. Only letters and special characters are allowed."
-                ]);
-            }
+        $textFields = ['name', 'description', 'recycling_instructions'];
 
-            // Check length between 5 and max characters
-            $length = strlen(trim($request->$field));
-            
-            // Define max length for each field
-            $maxLengths = [
-                'name' => 10,
-                'description' => 10,
-            ];
-            
-            if ($length < 5 || $length > $maxLengths[$field]) {
+        foreach ($textFields as $field) {
+            if ($request->filled($field) && trim($request->$field) === '') {
                 throw \Illuminate\Validation\ValidationException::withMessages([
-                    $field => "$fieldName must be between 5 and {$maxLengths[$field]} characters long."
-                ]);
-            }
-        }
-
-        // Validation spécifique pour recycling_instructions (seulement si non vide)
-        if (!empty(trim($request->recycling_instructions))) {
-            // Check for numbers in recycling_instructions
-            if (preg_match('/\d/', $request->recycling_instructions)) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
-                    'recycling_instructions' => "Recycling instructions cannot contain numbers. Only letters and special characters are allowed."
-                ]);
-            }
-
-            // Check length for recycling_instructions
-            $length = strlen(trim($request->recycling_instructions));
-            if ($length < 5 || $length > 100) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
-                    'recycling_instructions' => "Recycling instructions must be between 5 and 100 characters long."
+                    $field => "This field cannot contain only spaces."
                 ]);
             }
         }

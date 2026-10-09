@@ -72,7 +72,7 @@ class WasteController extends Controller
             'type' => [
                 'required', 
                 'string', 
-                'max:10',
+                'max:100',
                 'regex:/^[a-zA-Z\s\-]+$/'
             ],
             'weight' => [
@@ -107,7 +107,7 @@ class WasteController extends Controller
                 'required', 
                 'string', 
                 'min:5',
-                'max:10',
+                'max:100',
                 'regex:/^[a-zA-Z0-9\s\-\.,!?()]+$/'
             ],
         ], [

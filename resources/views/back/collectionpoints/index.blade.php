@@ -97,6 +97,33 @@
     padding: 0.9rem;
 }
 
+/* Sortable headers */
+.table thead th a.sort-link {
+    color: #198754;
+    text-decoration: none;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.table thead th a.sort-link:hover {
+    color: #0f5132;
+    text-decoration: underline;
+}
+
+/* Filter bar */
+.filter-bar {
+    background: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 6px 30px rgba(0,0,0,0.06);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.filter-bar .form-control,
+.filter-bar .form-select {
+    border-radius: 10px;
+}
+
 /* Action Buttons */
 .btn-action {
     border: none;
@@ -121,12 +148,6 @@
 .page-header h2 {
     font-weight: 700;
     color: #0d6efd;
-}
-
-.page-header select {
-    border-radius: 10px;
-    border: 1px solid #dee2e6;
-    padding: 0.5rem 1rem;
 }
 
 .btn-add {
@@ -238,57 +259,41 @@
     background: linear-gradient(135deg, #c82333, #a71e2a);
 }
 
-/* DataTables Enhancements */
-.dataTables_wrapper .dataTables_length select,
-.dataTables_wrapper .dataTables_filter input {
-    border-radius: .25rem;
-    border: 1px solid #ced4da;
-    padding: .375rem .75rem;
+/* Pagination tuning (Bootstrap 5) */
+.pagination {
+    margin-bottom: 0;
+}
+.pagination .page-link {
     color: #198754;
 }
-
-.dataTables_wrapper .dataTables_length select:focus,
-.dataTables_wrapper .dataTables_filter input:focus {
+.pagination .page-item.active .page-link {
+    background-color: #198754;
     border-color: #198754;
-    box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25);
-}
-
-.dataTables_wrapper .dataTables_paginate .paginate_button {
-    border-radius: .25rem;
-    margin: 0 2px;
-    padding: .25rem .5rem;
-    border: 1px solid #dee2e6;
-    background: white;
-    color: #198754 !important;
-}
-
-.dataTables_wrapper .dataTables_paginate .paginate_button.current,
-.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-    background: #198754 !important;
-    color: white !important;
-    border-color: #198754 !important;
-}
-
-.dataTables_wrapper .dataTables_info {
-    color: #6c757d;
-}
-
-.dataTables_wrapper .dataTables_length,
-.dataTables_wrapper .dataTables_filter {
-    margin-bottom: 1rem;
-}
-
-.dataTables_wrapper .dataTables_filter {
-    text-align: right;
-}
-
-@media (max-width: 768px) {
-    .dataTables_wrapper .dataTables_filter {
-        text-align: left;
-        margin-top: 1rem;
-    }
+    color: #fff;
 }
 </style>
+
+@php
+    $queryParams = request()->query();
+    $sortLink = function ($column) use ($queryParams) {
+        $isCurrent = request('sort') === $column;
+        $direction = ($isCurrent && request('direction') !== 'desc') ? 'desc' : 'asc';
+        $params = array_merge($queryParams, ['sort' => $column, 'direction' => $direction]);
+        return request()->url() . '?' . http_build_query($params);
+    };
+    $sortIcon = function ($column) {
+        if (request('sort') !== $column) {
+            return '<i class="bi bi-arrow-down-up small opacity-50"></i>';
+        }
+        return request('direction') === 'desc'
+            ? '<i class="bi bi-sort-down"></i>'
+            : '<i class="bi bi-sort-up"></i>';
+    };
+    $exportParams = array_filter(
+        request()->only('search', 'status', 'city'),
+        fn ($value) => $value !== null && $value !== ''
+    );
+@endphp
 
 <div class="container-fluid py-4 fade-in-up">
     <!-- Statistics -->
@@ -296,41 +301,43 @@
         <div class="collection-stats">
             <div class="stat-card bg-gradient-primary">
                 <i class="bi bi-recycle stat-icon"></i>
-                <div class="stat-number" id="total-points">{{ $collectionPoints->count() }}</div>
+                <div class="stat-number">{{ $total }}</div>
                 <div class="stat-label">Total Collection Points</div>
             </div>
             <div class="stat-card bg-gradient-success">
                 <i class="bi bi-check-circle-fill stat-icon"></i>
-                <div class="stat-number" id="active-points">{{ $collectionPoints->where('status', 'active')->count() }}</div>
+                <div class="stat-number">{{ $activeCount }}</div>
                 <div class="stat-label">Active Points</div>
             </div>
             <div class="stat-card bg-gradient-warning">
                 <i class="bi bi-pause-circle stat-icon"></i>
-                <div class="stat-number" id="inactive-points">{{ $collectionPoints->where('status', 'inactive')->count() }}</div>
+                <div class="stat-number">{{ $inactiveCount }}</div>
                 <div class="stat-label">Inactive Points</div>
             </div>
             <div class="stat-card bg-gradient-secondary">
                 <i class="bi bi-geo-alt stat-icon"></i>
-                <div class="stat-number" id="cities-count">{{ $collectionPoints->pluck('city')->unique()->filter()->count() }}</div>
+                <div class="stat-number">{{ $cities->count() }}</div>
                 <div class="stat-label">Cities Covered</div>
             </div>
         </div>
     </div>
 
     <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="page-header">
         <h2 class="fw-bold text-success mb-0">
             <i class="bi bi-recycle me-2"></i>Collection Points Management
         </h2>
-        <div class="d-flex gap-2">
-            <select id="status-filter" class="form-select form-select-sm">
-                <option value="">All Statuses</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="undefined">Undefined</option>
-            </select>
-
-            <a href="{{ route('collectionpoints.create') }}" class="btn btn-success btn-custom">
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{{ route('collectionpoints.export.csv', $exportParams) }}" class="btn btn-outline-success">
+                <i class="bi bi-filetype-csv me-1"></i>Export CSV
+            </a>
+            <a href="{{ route('collectionpoints.export.pdf', $exportParams) }}" class="btn btn-outline-danger">
+                <i class="bi bi-filetype-pdf me-1"></i>Export PDF
+            </a>
+            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#importModal">
+                <i class="bi bi-upload me-1"></i>Import CSV
+            </button>
+            <a href="{{ route('collectionpoints.create') }}" class="btn btn-add">
                 <i class="bi bi-plus-circle-fill me-2"></i>New Collection Point
             </a>
         </div>
@@ -351,6 +358,61 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
+    @if (session('import_errors') && count(session('import_errors')))
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <strong><i class="bi bi-exclamation-triangle-fill me-2"></i>Lignes ignorées :</strong>
+            <ul class="mb-0 mt-2">
+                @foreach (session('import_errors') as $importError)
+                    <li>{{ $importError }}</li>
+                @endforeach
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    <!-- Filters -->
+    <form method="GET" action="{{ route('collectionpoints.index') }}" class="filter-bar">
+        <div class="row g-2 align-items-end">
+            <div class="col-12 col-md-4">
+                <label class="form-label mb-1 small text-muted">Search</label>
+                <input type="text" name="search" value="{{ request('search') }}"
+                       class="form-control" placeholder="Name, address, city, phone...">
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label mb-1 small text-muted">City</label>
+                <select name="city" class="form-select">
+                    <option value="">All cities</option>
+                    @foreach ($cities as $city)
+                        <option value="{{ $city }}" @selected(request('city') === $city)>{{ $city }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label mb-1 small text-muted">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All statuses</option>
+                    <option value="active" @selected(request('status') === 'active')>Active</option>
+                    <option value="inactive" @selected(request('status') === 'inactive')>Inactive</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label mb-1 small text-muted">Per page</label>
+                <select name="per_page" class="form-select">
+                    @foreach ([5, 10, 25, 50, 100] as $size)
+                        <option value="{{ $size }}" @selected((int) request('per_page', 10) === $size)>{{ $size }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-6 col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-success flex-fill">
+                    <i class="bi bi-funnel-fill me-1"></i>Filter
+                </button>
+                <a href="{{ route('collectionpoints.index') }}" class="btn btn-outline-secondary" title="Reset filters">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            </div>
+        </div>
+    </form>
 
     @if ($collectionPoints->isEmpty())
         <div class="card shadow-sm border-0 rounded-3">
@@ -370,15 +432,15 @@
                 <table id="collectionpoints-table" class="table table-hover align-middle w-100 mb-0">
                     <thead class="table-light">
                         <tr class="text-center">
-                            <th><i class="bi bi-hash"></i> ID</th>
-                            <th><i class="bi bi-tag"></i> Name</th>
-                            <th><i class="bi bi-geo-alt"></i> Address</th>
-                            <th><i class="bi bi-building"></i> City</th>
-                            <th><i class="bi bi-mailbox"></i> Postal Code</th>
+                            <th><a class="sort-link" href="{{ $sortLink('id') }}">ID {!! $sortIcon('id') !!}</a></th>
+                            <th><a class="sort-link" href="{{ $sortLink('name') }}">Name {!! $sortIcon('name') !!}</a></th>
+                            <th><a class="sort-link" href="{{ $sortLink('address') }}">Address {!! $sortIcon('address') !!}</a></th>
+                            <th><a class="sort-link" href="{{ $sortLink('city') }}">City {!! $sortIcon('city') !!}</a></th>
+                            <th><a class="sort-link" href="{{ $sortLink('postal_code') }}">Postal Code {!! $sortIcon('postal_code') !!}</a></th>
                             <th><i class="bi bi-clock"></i> Opening Hours</th>
                             <th><i class="bi bi-tags"></i> Categories</th>
-                            <th><i class="bi bi-telephone"></i> Contact</th>
-                            <th><i class="bi bi-flag"></i> Status</th>
+                            <th><a class="sort-link" href="{{ $sortLink('contact_phone') }}">Contact {!! $sortIcon('contact_phone') !!}</a></th>
+                            <th><a class="sort-link" href="{{ $sortLink('status') }}">Status {!! $sortIcon('status') !!}</a></th>
                             <th><i class="bi bi-gear"></i> Actions</th>
                         </tr>
                     </thead>
@@ -407,10 +469,10 @@
                                             $openingHours = json_decode($openingHours, true);
                                         }
                                     @endphp
-                                    
+
                                     @if (is_array($openingHours) && !empty($openingHours))
-                                        <button class="btn btn-sm btn-outline-info border-0" 
-                                                data-bs-toggle="tooltip" 
+                                        <button class="btn btn-sm btn-outline-info border-0"
+                                                data-bs-toggle="tooltip"
                                                 data-bs-html="true"
                                                 title="<strong>Opening Hours:</strong><br>@foreach($openingHours as $horaire)• {{ $horaire }}<br>@endforeach">
                                             <i class="bi bi-clock"></i>
@@ -426,7 +488,7 @@
                                             $categories = json_decode($categories, true);
                                         }
                                     @endphp
-                                    
+
                                     @if (is_array($categories) && !empty($categories))
                                         <div class="d-flex flex-wrap gap-1 justify-content-center" style="max-width: 150px;">
                                             @foreach(array_slice($categories, 0, 2) as $category)
@@ -435,7 +497,7 @@
                                                 </span>
                                             @endforeach
                                             @if(count($categories) > 2)
-                                                <span class="badge bg-light text-muted border small" data-bs-toggle="tooltip" 
+                                                <span class="badge bg-light text-muted border small" data-bs-toggle="tooltip"
                                                       title="{{ implode(', ', array_slice($categories, 2)) }}">
                                                     +{{ count($categories) - 2 }}
                                                 </span>
@@ -474,9 +536,9 @@
                                 </td>
                                 <td>
                                     <div class="action-buttons">
-                                        <a href="{{ route('collectionpoints.edit', $collectionPoint->id) }}" 
+                                        <a href="{{ route('collectionpoints.edit', $collectionPoint->id) }}"
                                            class="action-btn action-edit"
-                                           data-bs-toggle="tooltip" 
+                                           data-bs-toggle="tooltip"
                                            title="Edit Collection Point">
                                             <i class="bi bi-pencil-square"></i>
                                         </a>
@@ -484,10 +546,10 @@
                                         <form action="{{ route('collectionpoints.destroy', $collectionPoint->id) }}" method="POST" class="d-inline">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" 
+                                            <button type="submit"
                                                     class="action-btn action-delete"
                                                     onclick="return confirm('Are you sure you want to delete this collection point?')"
-                                                    data-bs-toggle="tooltip" 
+                                                    data-bs-toggle="tooltip"
                                                     title="Delete Collection Point">
                                                 <i class="bi bi-trash3"></i>
                                             </button>
@@ -500,48 +562,63 @@
                 </table>
             </div>
         </div>
+
+        <!-- Pagination -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center mt-3 gap-2">
+            <div class="text-muted small">
+                Showing {{ $collectionPoints->firstItem() }}–{{ $collectionPoints->lastItem() }}
+                of {{ $collectionPoints->total() }} entries
+            </div>
+            {{ $collectionPoints->links('pagination::bootstrap-5') }}
+        </div>
     @endif
 </div>
 
+<!-- Import Modal -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ route('collectionpoints.import') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title" id="importModalLabel"><i class="bi bi-upload me-2"></i>Import Collection Points</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="csv_file" class="form-label">CSV file</label>
+                        <input type="file" name="csv_file" id="csv_file" class="form-control" accept=".csv" required>
+                        @error('csv_file')
+                            <div class="text-danger small mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <p class="text-muted small mb-0">
+                        The first line may contain headers (name, address, city, postal_code, latitude,
+                        longitude, contact_phone, status, opening_hours, accepted_categories).
+                        Use the CSV export as a template. Separator <code>;</code> or <code>,</code> is detected automatically.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success"><i class="bi bi-upload me-1"></i>Import</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- Scripts -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
-
 <script>
-$(document).ready(function () {
-    let table = $('#collectionpoints-table').DataTable({
-        responsive: true,
-        language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/en-GB.json' },
-        pageLength: 10,
-        lengthMenu: [5, 10, 25, 50],
-        columnDefs: [
-            { responsivePriority: 1, targets: 1 }, // Name
-            { responsivePriority: 2, targets: 9 }, // Actions
-            { responsivePriority: 3, targets: 3 }, // City
-            { responsivePriority: 4, targets: 8 }, // Status
-        ]
-    });
+    document.addEventListener('DOMContentLoaded', function () {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
 
-    // Status Filter
-    $('#status-filter').on('change', function () {
-        let val = $(this).val();
-        if (val === 'undefined') {
-            table.column(8).search('').draw();
-            // We'll need to handle undefined status differently
-            // This is a simplified approach
-        } else {
-            table.column(8).search(val).draw();
-        }
+        @if ($errors->has('csv_file'))
+            new bootstrap.Modal(document.getElementById('importModal')).show();
+        @endif
     });
-
-    // Initialize tooltips
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl)
-    });
-});
 </script>
 @endsection

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\DonationStatus;
+use App\Models\CollectionPoint;
 use App\Models\Donation;
 use App\Models\User;
 use App\Models\WasteCategory;
@@ -74,7 +75,7 @@ class DonationController extends Controller
 
     public function index()
     {
-        $query = Donation::with(['user', 'waste.category'])  // Eager load waste and its category for display/filtering
+        $query = Donation::with(['user', 'waste.category'])
             ->when(request('date_from'), function ($query) {
                 return $query->where('created_at', '>=', request('date_from'));
             })
@@ -89,7 +90,7 @@ class DonationController extends Controller
                     $q->where('name', 'like', '%' . $search . '%');
                 });
             })
-            ->when(request('waste_category_id'), function ($query, $waste_category_id) {  // Filter by category ID via waste
+            ->when(request('waste_category_id'), function ($query, $waste_category_id) {
                 return $query->whereHas('waste.category', function($q) use ($waste_category_id) {
                     $q->where('id', $waste_category_id);
                 });
@@ -101,14 +102,12 @@ class DonationController extends Controller
                 return $query->where('status', $status);
             });
 
-        $donations = $query->paginate(4);  // Paginate with 4 items per page
+        $donations = $query->paginate(4);
 
-        // AI Sentiment Analysis for batch display
         $service = new SentimentService();
-        $sentiments = $service->getSentimentsForDonations($donations->items());  // Only current page
+        $sentiments = $service->getSentimentsForDonations($donations->items());
 
-        // Load from DB instead of static
-        $wasteCategories = WasteCategory::pluck('name', 'id')->toArray();  // For filters/display
+        $wasteCategories = WasteCategory::pluck('name', 'id')->toArray();
 
         $viewPrefix = $this->getViewPrefix();
         $createRoute = $this->getCreateRoute();
@@ -117,20 +116,21 @@ class DonationController extends Controller
 
     public function create()
     {
-        // Load wastes/categories from DB for dropdown
-        $wasteCategories = WasteCategory::all(['id', 'name']);  // For selection
+        $wasteCategories = WasteCategory::all(['id', 'name']);
+        $collectionPoints = CollectionPoint::all(['id', 'name']);
         $users = User::all();
         $viewPrefix = $this->getViewPrefix();
         $storeRoute = $this->getStoreRoute();
         $indexRoute = $this->getIndexRoute();
-        return view($viewPrefix . 'donations.create', compact('wasteCategories', 'users', 'storeRoute', 'indexRoute'));
+        return view($viewPrefix . 'donations.create', compact('wasteCategories', 'collectionPoints', 'users', 'storeRoute', 'indexRoute'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
-            'waste_category_id' => 'required|exists:waste_categories,id',  // Changed to category for simplicity; adjust if needed
+            'waste_category_id' => 'required|exists:waste_categories,id',
+            'collection_point_id' => 'nullable|exists:collection_points,id',
             'item_name' => 'required|string|max:255',
             'condition' => 'required|string|in:new,used,damaged',
             'description' => 'nullable|string',
@@ -139,21 +139,26 @@ class DonationController extends Controller
             'pickup_address' => 'required_if:pickup_required,true|string|nullable|max:255',
         ]);
 
-        // Create a new Waste entry linked to the category (since donation needs waste_id)
+        // Récupère l'ID envoyé ou prend le premier point de collecte de la DB (fallback à 1)
+        $defaultCollectionPointId = CollectionPoint::value('id') ?? 1;
+        $collectionPointId = $validated['collection_point_id'] ?? $defaultCollectionPointId;
+
+        // Création de l'entrée Waste avec un collection_point_id valide
         $waste = \App\Models\Waste::create([
-            'type' => $validated['item_name'],  // Or derive from category
-            'weight' => 0,  // Default; update via form if needed
+            'type' => $validated['item_name'],
+            'weight' => 0,
             'status' => 'reusable',
             'user_id' => $validated['user_id'],
             'waste_category_id' => $validated['waste_category_id'],
-            'collection_point_id' => null,  // Optional
+            'collection_point_id' => $collectionPointId,
             'image_path' => null,
             'description' => $validated['description'],
         ]);
 
-        // Map to waste_id for donation
+        // Nettoyage des champs temporaires pour Donation::create
         $validated['waste_id'] = $waste->id;
-        unset($validated['waste_category_id']);  // Remove temp field
+        unset($validated['waste_category_id']);
+        unset($validated['collection_point_id']);
 
         if ($request->hasFile('images')) {
             $imagePaths = [];
@@ -165,12 +170,8 @@ class DonationController extends Controller
 
         $donation = Donation::create($validated + ['status' => DonationStatus::Available]);
 
-        // AI Sentiment Analysis
         $service = new SentimentService();
         $sentiment = $service->analyzeSentiment($validated['description'] ?? '');
-
-        // Optional: Log or update model (e.g., add 'sentiment' column via migration)
-        // $donation->update(['sentiment' => $sentiment]);
 
         $indexRoute = $this->getIndexRoute();
         return redirect()->route($indexRoute)->with('success', 'Donation created successfully! Sentiment: ' . ucfirst($sentiment));
@@ -186,7 +187,7 @@ class DonationController extends Controller
 
     public function show(Donation $donation)
     {
-        $donation->load(['user', 'waste.category']);  // Load related waste and category
+        $donation->load(['user', 'waste.category']);
         $viewPrefix = $this->getViewPrefix();
         $indexRoute = $this->getIndexRoute();
         $editRoute = $this->getEditRoute($donation);
@@ -197,22 +198,22 @@ class DonationController extends Controller
     public function edit(Donation $donation)
     {
         $donation->load(['user', 'waste.category']);
-        // Load wastes/categories from DB for dropdown
         $wasteCategories = WasteCategory::all(['id', 'name']);
+        $collectionPoints = CollectionPoint::all(['id', 'name']);
         $users = User::all();
         $viewPrefix = $this->getViewPrefix();
         $updateRoute = $this->getUpdateRoute($donation);
         $showRoute = $this->getShowRoute($donation);
         $indexRoute = $this->getIndexRoute();
-        return view($viewPrefix . 'donations.edit', compact('donation', 'wasteCategories', 'users', 'updateRoute', 'showRoute', 'indexRoute'));
+        return view($viewPrefix . 'donations.edit', compact('donation', 'wasteCategories', 'collectionPoints', 'users', 'updateRoute', 'showRoute', 'indexRoute'));
     }
 
     public function update(Request $request, Donation $donation)
     {
-        // Base rules without status
         $rules = [
             'user_id' => 'required|exists:users,id',
-            'waste_category_id' => 'required|exists:waste_categories,id',  // Temp for update; will map to waste
+            'waste_category_id' => 'required|exists:waste_categories,id',
+            'collection_point_id' => 'nullable|exists:collection_points,id',
             'item_name' => 'required|string|max:255',
             'condition' => 'required|string|in:new,used,damaged',
             'description' => 'nullable|string',
@@ -221,27 +222,32 @@ class DonationController extends Controller
             'pickup_address' => 'required_if:pickup_required,true|string|nullable|max:255',
         ];
 
-        // Add status rule only for back-end (admin) routes
         if (!$this->isFrontRoute()) {
             $rules['status'] = ['required', Rule::enum(DonationStatus::class)];
         }
 
         $validated = $request->validate($rules);
 
-        // For front-end, preserve existing status if not provided
         if ($this->isFrontRoute() && !isset($validated['status'])) {
             $validated['status'] = $donation->status;
         }
 
-        // Update or create waste if category changed
-        if (isset($validated['waste_category_id']) && $validated['waste_category_id'] != $donation->waste->waste_category_id) {
-            // Update existing waste or create new
-            $donation->waste->update(['waste_category_id' => $validated['waste_category_id']]);
+        // Mettre à jour Waste
+        $wasteUpdateData = [];
+        if (isset($validated['waste_category_id'])) {
+            $wasteUpdateData['waste_category_id'] = $validated['waste_category_id'];
         }
-        unset($validated['waste_category_id']);  // Clean up
+        if (isset($validated['collection_point_id'])) {
+            $wasteUpdateData['collection_point_id'] = $validated['collection_point_id'];
+        }
+        if (!empty($wasteUpdateData)) {
+            $donation->waste->update($wasteUpdateData);
+        }
+
+        unset($validated['waste_category_id']);
+        unset($validated['collection_point_id']);
 
         if ($request->hasFile('images')) {
-            // Optionally delete old images if needed
             if ($donation->images && is_array($donation->images)) {
                 foreach ($donation->images as $imagePath) {
                     Storage::disk('public')->delete($imagePath);
@@ -256,7 +262,6 @@ class DonationController extends Controller
 
         $donation->update($validated);
 
-        // AI Sentiment Analysis on update
         $service = new SentimentService();
         $sentiment = $service->analyzeSentiment($validated['description'] ?? '');
 
@@ -266,14 +271,11 @@ class DonationController extends Controller
 
     public function destroy(Donation $donation)
     {
-        // Optionally delete images and related waste if needed
         if ($donation->images && is_array($donation->images)) {
             foreach ($donation->images as $imagePath) {
                 Storage::disk('public')->delete($imagePath);
             }
         }
-        // Optionally delete associated waste
-        // $donation->waste->delete();  // Uncomment if desired
         $donation->delete();
         $indexRoute = $this->getIndexRoute();
         return redirect()->route($indexRoute)->with('success', 'Donation deleted!');
@@ -281,7 +283,6 @@ class DonationController extends Controller
 
     public static function getWasteTypeName($wasteId)
     {
-        // Updated to use DB
         return WasteCategory::find($wasteId)?->name ?? 'N/A';
     }
 }

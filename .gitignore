@@ -22,3 +22,5 @@ Homestead.json
 .phpunit.result.cache
 
 .env
+.env.docker
+.dockerignore

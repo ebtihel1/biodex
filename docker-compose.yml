@@ -1,0 +1,231 @@
+version: '3.8'
+
+services:
+  # ============================================
+  # Base de données MySQL
+  # ============================================
+  mysql:
+    image: mysql:8.0
+    container_name: biodex-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${DB_DATABASE:-biodex}
+      MYSQL_USER: ${DB_USERNAME:-biodex_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-biodex_password}
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - biodex-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================
+  # Backend Laravel (PHP-FPM)
+  # ============================================
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: biodex-backend
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+      - ./storage/app/public:/var/www/html/storage/app/public
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      APP_DEBUG: ${APP_DEBUG:-false}
+      APP_URL: ${APP_URL:-http://localhost}
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE:-biodex}
+      DB_USERNAME: ${DB_USERNAME:-biodex_user}
+      DB_PASSWORD: ${DB_PASSWORD:-biodex_password}
+      CACHE_DRIVER: redis
+      SESSION_DRIVER: redis
+      QUEUE_CONNECTION: redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - biodex-network
+    expose:
+      - "9000"
+
+  # ============================================
+  # Frontend Vite (nginx)
+  # ============================================
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: biodex-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-8081}:80"
+    networks:
+      - biodex-network
+    depends_on:
+      - backend
+
+  # ============================================
+  # Redis (cache et queue)
+  # ============================================
+  redis:
+    image: redis:7-alpine
+    container_name: biodex-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - biodex-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================
+  # Service IA Principal (app.py - port 5000)
+  # ============================================
+  ai-service-main:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: biodex-ai-main
+    restart: unless-stopped
+    command: ["python", "app.py"]
+    environment:
+      FLASK_HOST: 0.0.0.0
+      FLASK_PORT: 5000
+      AI_SERVICE_THREADS: 4
+      AI_LLM_ENABLED: ${AI_LLM_ENABLED:-0}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-}
+      BIODEX_AI_MODEL_DIR: /app/models
+    volumes:
+      - ./ai-service:/app
+      - ai_models:/app/models
+    ports:
+      - "5000:5000"
+    networks:
+      - biodex-network
+
+  # ============================================
+  # Service IA Waste Advice (waste_ai_service.py - port 5001)
+  # ============================================
+  ai-service-waste:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: biodex-ai-waste
+    restart: unless-stopped
+    command: ["python", "waste_ai_service.py"]
+    environment:
+      FLASK_HOST: 0.0.0.0
+      WASTE_AI_PORT: 5001
+      AI_SERVICE_THREADS: 4
+      AI_LLM_ENABLED: ${AI_LLM_ENABLED:-0}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-}
+    volumes:
+      - ./ai-service:/app
+    ports:
+      - "5001:5001"
+    networks:
+      - biodex-network
+
+  # ============================================
+  # Service IA Recycling (recycling_ai_service.py - port 5002)
+  # ============================================
+  ai-service-recycling:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: biodex-ai-recycling
+    restart: unless-stopped
+    command: ["python", "recycling_ai_service.py"]
+    environment:
+      FLASK_HOST: 0.0.0.0
+      RECYCLING_AI_PORT: 5002
+      AI_SERVICE_THREADS: 4
+      AI_LLM_ENABLED: ${AI_LLM_ENABLED:-0}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-}
+    volumes:
+      - ./ai-service:/app
+    ports:
+      - "5002:5002"
+    networks:
+      - biodex-network
+
+  # ============================================
+  # Service IA Image Classifier (image_classifier.py - port 5004)
+  # ============================================
+  ai-service-image:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: biodex-ai-image
+    restart: unless-stopped
+    command: ["python", "image_classifier.py"]
+    environment:
+      FLASK_HOST: 0.0.0.0
+      WASTE_IMG_PORT: 5004
+      AI_SERVICE_THREADS: 4
+    volumes:
+      - ./ai-service:/app
+      - ai_models:/app/models
+    ports:
+      - "5004:5004"
+    networks:
+      - biodex-network
+
+  # ============================================
+  # Nginx Reverse Proxy
+  # ============================================
+  nginx:
+    image: nginx:alpine
+    container_name: biodex-nginx
+    restart: unless-stopped
+    ports:
+      - "${NGINX_PORT:-80}:80"
+      - "${NGINX_SSL_PORT:-443}:443"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/conf.d/biodex.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./storage/app/public:/var/www/html/storage/app/public:ro
+    depends_on:
+      - backend
+      - frontend
+      - ai-service-main
+      - ai-service-waste
+      - ai-service-recycling
+      - ai-service-image
+    networks:
+      - biodex-network
+
+networks:
+  biodex-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+  ai_models:
+    driver: local

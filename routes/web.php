@@ -342,26 +342,8 @@ Route::post('/logout', [AuthentifController::class, 'logout'])->name('logout');
 // =============================================================
 Route::view('/recycling', 'front.recycling');
 
-Route::get('/about', function () {
-    $count = function (string $table): int {
-        try {
-            return \Illuminate\Support\Facades\DB::table($table)->count();
-        } catch (\Throwable $e) {
-            return 0;
-        }
-    };
 
-    return view('front.about', [
-        'stats' => [
-            ['icon' => 'people-fill', 'label' => 'Registered members', 'value' => $count('users')],
-            ['icon' => 'geo-alt-fill', 'label' => 'Collection points', 'value' => $count('collection_points')],
-            ['icon' => 'megaphone-fill', 'label' => 'Campaigns launched', 'value' => $count('campaigns')],
-            ['icon' => 'bag-check-fill', 'label' => 'Eco-products listed', 'value' => $count('products')],
-            ['icon' => 'recycle', 'label' => 'Waste streams tracked', 'value' => $count('wastes')],
-            ['icon' => 'hand-thumbs-up-fill', 'label' => 'Community participations', 'value' => $count('participations')],
-        ],
-    ]);
-});
+
 
 Route::view('/contact', 'front.contact');
 

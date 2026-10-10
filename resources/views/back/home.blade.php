@@ -702,7 +702,7 @@
                             <tbody>
                                 @forelse($recentOrders as $o)
                                     <tr>
-                                        <td class="id">#{{ $o['id'] }}</td>
+                                        <td class="id">{{ $o['id'] }}</td>
                                         <td>{{ $o['user'] }}</td>
                                         <td class="num fw-semibold">{{ number_format($o['amount'], 2, ',', ' ') }} DT</td>
                                         <td><span class="pill pill-{{ $statusTone($o['status']) }}">{{ ucfirst($o['status']) }}</span></td>
@@ -732,7 +732,7 @@
                             <tbody>
                                 @forelse($recentDonations as $d)
                                     <tr>
-                                        <td class="id">#{{ $d['id'] }}</td>
+                                        <td class="id">{{ $d['id'] }}</td>
                                         <td>{{ \Illuminate\Support\Str::limit($d['item'], 20) }}</td>
                                         <td><span class="pill pill-mute">{{ $d['condition'] }}</span></td>
                                         <td><span class="pill pill-{{ $statusTone($d['status']) === 'mute' ? 'ok' : $statusTone($d['status']) }}">{{ ucfirst($d['status']) }}</span></td>
@@ -772,9 +772,9 @@
                             <tbody>
                                 @forelse($recentReservations as $r)
                                     <tr>
-                                        <td class="id">#{{ $r['id'] }}</td>
+                                        <td class="id">{{ $r['id'] }}</td>
                                         <td>{{ $r['user'] }}</td>
-                                        <td class="num">#{{ $r['product_id'] }}</td>
+                                        <td class="num">{{ $r['product_id'] }}</td>
                                         <td class="num">{{ $r['quantity'] }}</td>
                                         <td><span class="pill pill-{{ $statusTone($r['status']) }}">{{ ucfirst($r['status']) }}</span></td>
                                         <td class="num" style="color:var(--ink-soft)">{{ \Carbon\Carbon::parse($r['date'])->format('d/m/Y H:i') }}</td>

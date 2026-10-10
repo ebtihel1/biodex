@@ -64,11 +64,17 @@
 
     <!-- Résultats -->
     <div class="row mb-3">
-        <div class="col-12">
-            <p class="text-muted">
+        <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <p class="text-muted mb-0">
                 <i class="bi bi-grid-3x3-gap me-2"></i>
                 {{ $products->total() }} product(s) found
             </p>
+            @if($products->total() > 0)
+                <small class="text-muted">
+                    Showing {{ $products->firstItem() }}–{{ $products->lastItem() }}
+                    of {{ $products->total() }}
+                </small>
+            @endif
         </div>
     </div>
 
@@ -144,10 +150,12 @@
             @endforeach
         </div>
 
-        <!-- Pagination -->
-        <div class="d-flex justify-content-center">
-            {{ $products->links('pagination::bootstrap-5') }}
-        </div>
+        <!-- ============ PAGINATION ============ -->
+        @if ($products->hasPages())
+            <div class="d-flex justify-content-center mt-4">
+                {{ $products->withQueryString()->links('pagination::bootstrap-5') }}
+            </div>
+        @endif
     @endif
 </div>
 
@@ -192,6 +200,62 @@
     color: white;
     background-color: #198754;
 }
+
+/* ===== Pagination stylisée ===== */
+.pagination {
+    gap: 6px;
+    margin-bottom: 0;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.pagination .page-link {
+    border: 1px solid #e0e0e0;
+    border-radius: 10px !important;
+    color: #198754;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 0.55rem 0.9rem;
+    min-width: 42px;
+    text-align: center;
+    transition: all 0.25s ease;
+    background: #fff;
+}
+
+.pagination .page-link:hover {
+    background: #198754;
+    color: #fff;
+    border-color: #198754;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(25, 135, 84, 0.25);
+}
+
+.pagination .page-item.active .page-link {
+    background: linear-gradient(135deg, #198754, #146c43);
+    border-color: #198754;
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(25, 135, 84, 0.35);
+}
+
+.pagination .page-item.disabled .page-link {
+    background: #f8f9fa;
+    border-color: #e9ecef;
+    color: #adb5bd;
+    cursor: not-allowed;
+}
+
+.pagination .page-item:first-child .page-link,
+.pagination .page-item:last-child .page-link {
+    border-radius: 10px !important;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+    .pagination .page-link {
+        padding: 0.4rem 0.65rem;
+        font-size: 0.82rem;
+        min-width: 36px;
+    }
+}
 </style>
 @endsection
-

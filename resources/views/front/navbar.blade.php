@@ -25,11 +25,7 @@
                         <i class="bi bi-geo-alt me-1"></i>collectionpoints
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a href="{{ url('/biodex/collectionpoints/map') }}" class="nav-link {{ request()->is('front.collectionpoints.map') ? 'active' : '' }}">
-                        <i class="bi bi-map me-1"></i>Map
-                    </a>
-                </li>
+             
 
                 <li class="nav-item">
                     <a href="{{ url('/campaignsFront') }}" class="nav-link {{ request()->is('campaigns*') ? 'active' : '' }}">
@@ -41,12 +37,6 @@
                 <li class="nav-item">
                     <a href="{{ route('front.waste-categories.index') }}" class="nav-link {{ request()->is('waste-categories*') ? 'active' : '' }}">
                         <i class="bi bi-grid-3x3-gap me-1"></i>Waste Categories
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{{ route('ai.classify.form') }}" class="nav-link {{ request()->routeIs('ai.classify.*') ? 'active' : '' }}">
-                        <i class="bi bi-cpu me-1"></i>AI Classify
                     </a>
                 </li>
 
@@ -68,11 +58,7 @@
                     </a>
                 </li>
 
-                <li class="nav-item">
-                    <a href="{{ url('/about') }}" class="nav-link {{ request()->is('about') ? 'active' : '' }}">
-                        <i class="bi bi-info-circle me-1"></i>About
-                    </a>
-                </li>
+            
 
                 <li class="nav-item">
                     <a href="{{ url('/contact') }}" class="nav-link {{ request()->is('contact') ? 'active' : '' }}">

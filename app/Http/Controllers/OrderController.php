@@ -145,20 +145,35 @@ class OrderController extends Controller
     }
 
     // ======================= CREATE =======================
-    public function create()
+    public function create(Request $request)
     {
+        // Liste des produits disponibles
         $products = Product::available()->get(['id', 'name', 'price']);
+
+        // Produit pré-sélectionné (venant de la page détail produit)
+        $selectedProductId = $request->query('product_id');
+        $selectedProduct = $selectedProductId
+            ? Product::find($selectedProductId)
+            : null;
+
         $viewPrefix = $this->getViewPrefix();
         $storeRoute = $this->getStoreRoute();
         $indexRoute = $this->getIndexRoute();
 
+        // Recommandations IA
         $recommendations = [];
         if (Auth::check()) {
             $service = new RecommendationService();
             $recommendations = $service->suggestForUser(Auth::user());
         }
 
-        return view($viewPrefix . 'orders.create', compact('products', 'storeRoute', 'indexRoute', 'recommendations'));
+        return view($viewPrefix . 'orders.create', compact(
+            'products',
+            'storeRoute',
+            'indexRoute',
+            'recommendations',
+            'selectedProduct'
+        ));
     }
 
     // ======================= STORE =======================

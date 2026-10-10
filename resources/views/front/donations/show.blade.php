@@ -8,7 +8,7 @@
             <div class="card shadow">
                 <div class="card-body p-3 p-md-4">
                     <h1 class="h3 font-weight-bold mb-4 text-success text-center">
-                        <i class="fas fa-recycle me-2"></i>Donation #{{ $donation->id }}
+                        <i class="fas fa-recycle me-2"></i>Donation {{ $donation->item }}
                     </h1>
                     
                     @if (session('success'))

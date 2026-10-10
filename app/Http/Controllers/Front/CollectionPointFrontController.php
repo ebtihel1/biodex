@@ -8,13 +8,13 @@ use App\Http\Controllers\Controller;
 class CollectionPointFrontController extends Controller
 {
     public function index()
-    {
-        $collectionPoints = CollectionPoint::where('status', 'active')->get();
-        return view('front.collectionpoints.index', [
-            'collectionPoints' => $collectionPoints,
-            'title' => 'Points de Collecte'
-        ]);
-    }
+{
+    $collectionPoints = CollectionPoint::query()
+        ->orderBy('name')
+        ->paginate(9);
+
+    return view('front.collectionpoints.index', compact('collectionPoints'));
+}
 
     public function map()
     {

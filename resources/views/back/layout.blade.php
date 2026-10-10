@@ -269,16 +269,8 @@
             <i class="bi bi-tags me-2"></i> Waste Categories
         </a>
     </li>
-    <li>
-        <a href="{{ route('predictwaste') }}" class="nav-link text-white" data-tooltip="AI Waste Prediction">
-                <i class="bi bi-cpu me-2"></i> Predict Waste
-            </a>
-    </li>
-    <li>
-         <a href="{{ route('ai.advice.form') }}" class="nav-link text-white" data-tooltip="AI Recycling Advice">
-                <i class="bi bi-lightbulb me-2"></i> AI Recycling Advice
-            </a>
-    </li>
+   
+ 
 </ul>
                
 </li>
@@ -361,9 +353,8 @@
         <div class="main-content" id="mainContent">
             <!-- Header -->
             <div class="header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Dashboard</h5>
+                <h5 class="mb-0"></h5>
                 <div class="d-flex align-items-center gap-3">
-                    <input type="text" class="header-search form-control form-control-sm" placeholder="Search..." aria-label="Search">
                     <a href="{{ route('back.profile') }}" class="header-profile text-decoration-none" aria-label="User Profile" title="Profile">
                         <i class="bi bi-person-circle fs-4"></i>
                     </a>

@@ -2,6 +2,21 @@
 
 @section('content')
 <div class="container my-5">
+    <!-- Flash messages -->
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>{{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
     <!-- Breadcrumb -->
     <nav aria-label="breadcrumb" class="mb-4">
         <ol class="breadcrumb">
@@ -121,15 +136,24 @@
 
                 <!-- Bouton d'action -->
                 <div class="d-grid gap-2 mb-4">
-                    @if($product->stock_quantity > 0)
-                        <button class="btn btn-success btn-lg" onclick="alert('Fonctionnalité de commande à venir !')">
-                            <i class="bi bi-cart-plus me-2"></i> Add to Cart
-                        </button>
+                    @auth
+                        @if($product->stock_quantity > 0)
+                            <form action="{{ route('front.products.add-to-cart', $product) }}" method="POST">
+                                @csrf
+                                <button type="submit" class="btn btn-success btn-lg">
+                                    <i class="bi bi-cart-plus me-2"></i> Add to Cart
+                                </button>
+                            </form>
+                        @else
+                            <button class="btn btn-secondary btn-lg" disabled>
+                                <i class="bi bi-x-circle me-2"></i> Product Unavailable
+                            </button>
+                        @endif
                     @else
-                        <button class="btn btn-secondary btn-lg" disabled>
-                            <i class="bi bi-x-circle me-2"></i> Product Unavailable
-                        </button>
-                    @endif
+                        <a href="{{ route('login.form') }}" class="btn btn-success btn-lg">
+                            <i class="bi bi-box-arrow-in-right me-2"></i> Login to Add to Cart
+                        </a>
+                    @endauth
                 </div>
 
                 <!-- Impact écologique -->

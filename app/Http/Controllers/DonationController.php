@@ -12,6 +12,7 @@ use App\Services\SentimentService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
@@ -117,9 +118,8 @@ class DonationController extends Controller
         $summary = (clone $query)
             ->selectRaw('COUNT(*) as total_count')
             ->selectRaw("SUM(CASE WHEN status = 'available' THEN 1 ELSE 0 END) as available_count")
-            ->selectRaw("SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_count")
-            ->selectRaw("SUM(CASE WHEN status = 'accepted' THEN 1 ELSE 0 END) as accepted_count")
-            ->selectRaw("SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected_count")
+            ->selectRaw("SUM(CASE WHEN status = 'claimed' THEN 1 ELSE 0 END) as claimed_count")
+            ->selectRaw("SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_count")
             ->first();
 
         $perPage = (int) $request->query('per_page', 10);
@@ -467,6 +467,10 @@ class DonationController extends Controller
     protected function filteredQuery(Request $request): Builder
     {
         $query = Donation::with(['user', 'waste.category']);
+
+        if ($this->isFrontRoute()) {
+            $query->where('user_id', Auth::id() ?? 0);
+        }
 
         if ($search = trim((string) $request->query('search', ''))) {
             $query->where(function (Builder $q) use ($search) {

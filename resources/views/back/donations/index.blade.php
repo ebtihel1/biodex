@@ -197,13 +197,13 @@
             </div>
             <div class="stat-card">
                 <i class="bi bi-clock-history stat-icon"></i>
-                <div class="stat-number">{{ number_format((int) $summary->pending_count) }}</div>
-                <div class="stat-label">Pending</div>
+                <div class="stat-number">{{ number_format((int) $summary->claimed_count) }}</div>
+                <div class="stat-label">Claimed</div>
             </div>
             <div class="stat-card">
                 <i class="bi bi-check2-all stat-icon"></i>
-                <div class="stat-number">{{ number_format((int) $summary->accepted_count) }}</div>
-                <div class="stat-label">Accepted</div>
+                <div class="stat-number">{{ number_format((int) $summary->completed_count) }}</div>
+                <div class="stat-label">Completed</div>
             </div>
         </div>
     </div>

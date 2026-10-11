@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers\Front;
 
+use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\WasteCategory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ProductFrontController extends Controller
 {
@@ -69,6 +72,38 @@ class ProductFrontController extends Controller
             ->get();
 
         return view('front.products.show', compact('product', 'similarProducts'));
+    }
+
+    /**
+     * Add the product to the cart, which immediately creates a pending order.
+     */
+    public function addToCart(Product $product)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login.form')
+                ->with('error', 'Please login to add products to your cart.');
+        }
+
+        if (!$product->is_available || $product->stock_quantity <= 0) {
+            return redirect()->back()->with('error', 'This product is currently unavailable.');
+        }
+
+        Order::create([
+            'user_id' => Auth::id(),
+            'product_id' => $product->id,
+            'quantity' => 1,
+            'total_amount' => $product->price,
+            'status' => OrderStatus::Pending->value,
+            'order_date' => now(),
+            'shipping_address' => Auth::user()->address ?? 'To be confirmed',
+            'payment_method' => 'cash',
+            'tracking_number' => null,
+        ]);
+
+        $product->decrementStock(1);
+
+        return redirect()->back()
+            ->with('success', $product->name . ' has been added to your orders.');
     }
 }
 

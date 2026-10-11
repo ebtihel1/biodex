@@ -114,7 +114,7 @@ class OrderController extends Controller
         $summary = (clone $query)
             ->selectRaw('COUNT(*) as total_count')
             ->selectRaw("SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_count")
-            ->selectRaw("SUM(CASE WHEN status = 'confirmed' THEN 1 ELSE 0 END) as confirmed_count")
+            ->selectRaw("SUM(CASE WHEN status = 'shipped' THEN 1 ELSE 0 END) as shipped_count")
             ->selectRaw("SUM(CASE WHEN status = 'delivered' THEN 1 ELSE 0 END) as delivered_count")
             ->selectRaw("SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled_count")
             ->selectRaw('COALESCE(SUM(total_amount), 0) as total_revenue')
@@ -415,6 +415,10 @@ class OrderController extends Controller
     protected function filteredQuery(Request $request): Builder
     {
         $query = Order::query()->with(['user', 'product']);
+
+        if ($this->isFrontRoute()) {
+            $query->where('user_id', Auth::id() ?? 0);
+        }
 
         if ($search = trim((string) $request->query('search', ''))) {
             $query->where(function (Builder $q) use ($search) {

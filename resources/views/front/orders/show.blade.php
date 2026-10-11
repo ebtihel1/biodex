@@ -2,146 +2,291 @@
 @extends('front.layout')
 
 @section('content')
-<div class="min-vh-100 d-flex align-items-center justify-content-center bg-gradient text-dark" style="background: linear-gradient(to bottom right, #d4edda, #c3e6cb);">
-    <div class="container py-3 py-md-5">
-        <div class="row justify-content-center">
-            <div class="col-12 col-md-8 col-lg-6">
-                <div class="card shadow-lg border-0">
-                    <div class="card-body p-3 p-md-4">
-                        <h1 class="h3 fw-bold mb-4 text-success text-center">
-                            <i class="fas fa-shopping-cart me-2"></i>Order Details #{{ $order->id }}
-                        </h1>
-                        
-                        @if (session('success'))
-                            <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
-                                <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
+@php
+    $statusKey = $order->status->value ?? $order->status;
+    $statusMap = [
+        'pending'   => ['label' => 'Pending',   'class' => 'is-pending'],
+        'shipped'   => ['label' => 'Shipped',   'class' => 'is-shipped'],
+        'delivered' => ['label' => 'Delivered', 'class' => 'is-delivered'],
+        'cancelled' => ['label' => 'Cancelled', 'class' => 'is-cancelled'],
+    ];
+    $status = $statusMap[$statusKey] ?? ['label' => ucfirst($statusKey), 'class' => 'is-default'];
+    $hasImage = $order->product && $order->product->image_path;
+@endphp
+
+<div class="container py-4 py-lg-5 order-show-page">
+
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ route('front.orders.index') }}">My orders</a></li>
+        </ol>
+    </nav>
+
+    <section class="page-hero">
+        <div class="page-hero__text">
+            <span class="page-hero__eyebrow"><i class="fas fa-receipt"></i> Order details</span>
+            <h1 class="page-hero__title">Order #{{ $order->id }}</h1>
+            <p class="page-hero__subtitle">
+                Placed on {{ $order->order_date?->format('M d, Y \a\t H:i') ?? '—' }}
+            </p>
+        </div>
+        <span class="status-pill {{ $status['class'] }} on-hero">{{ $status['label'] }}</span>
+    </section>
+
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show soft-alert" role="alert">
+            <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    <div class="row g-4">
+        <div class="col-12 col-lg-7">
+            <div class="panel">
+                <div class="panel-head">
+                    <h2><i class="fas fa-box-open"></i> Product</h2>
+                </div>
+                <div class="product-summary">
+                    <div class="product-thumb">
+                        @if($hasImage)
+                            <img src="{{ Storage::url($order->product->image_path) }}" alt="">
+                        @else
+                            <i class="fas fa-box-open"></i>
                         @endif
-
-                        <div class="row">
-                            <div class="col-12 col-md-6">
-                                <h6 class="fw-bold text-success mb-3">
-                                    <i class="fas fa-info-circle me-1 text-muted"></i>Overview
-                                </h6>
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">
-                                        <i class="fas fa-user me-1 text-muted"></i>User
-                                    </label>
-                                    <p class="form-control">{{ $order->user->name ?? 'Guest' }}</p>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">
-                                        <i class="fas fa-tag me-1 text-muted"></i>Product
-                                    </label>
-                                    <p class="form-control">{{ $order->product->name ?? 'N/A' }}</p>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">
-                                        <i class="fas fa-hashtag me-1 text-muted"></i>Quantity
-                                    </label>
-                                    <p class="form-control">{{ $order->quantity ?? 'N/A' }}</p>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">
-                                        <i class="fas fa-dollar-sign me-1 text-muted"></i>Total Amount
-                                    </label>
-                                    <p class="form-control fw-bold text-success">${{ number_format($order->total_amount ?? 0, 2) }}</p>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">
-                                        <i class="fas fa-exclamation-circle me-1 text-muted"></i>Status
-                                    </label>
-                                    <p class="form-control">
-                                        <span class="badge @switch($order->status->value ?? strtolower($order->status))
-                                            @case('completed') bg-success @break
-                                            @case('processing') bg-primary @break
-                                            @case('pending') bg-warning @break
-                                            @case('cancelled') bg-danger @break
-                                            @default bg-secondary
-                                        @endswitch">
-                                            {{ ucfirst($order->status->value ?? $order->status) }}
-                                        </span>
-                                    </p>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">
-                                        <i class="fas fa-calendar me-1 text-muted"></i>Order Date
-                                    </label>
-                                    <p class="form-control">{{ $order->order_date?->format('M d, Y H:i') ?? 'N/A' }}</p>
-                                </div>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <h6 class="fw-bold text-success mb-3">
-                                    <i class="fas fa-truck me-1 text-muted"></i>Shipping & Payment
-                                </h6>
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">
-                                        <i class="fas fa-map-marker-alt me-1 text-muted"></i>Shipping Address
-                                    </label>
-                                    <p class="form-control">{{ $order->shipping_address ?? 'N/A' }}</p>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">
-                                        <i class="fas fa-credit-card me-1 text-muted"></i>Payment Method
-                                    </label>
-                                    <p class="form-control">{{ ucfirst($order->payment_method ?? 'N/A') }}</p>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">
-                                        <i class="fas fa-route me-1 text-muted"></i>Tracking Number
-                                    </label>
-                                    <p class="form-control">{{ $order->tracking_number ?? 'Not available' }}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="d-flex justify-content-center mt-4">
-                            <a href="{{ route('front.orders.index') }}" class="btn btn-secondary w-100 w-md-auto">
-                                <i class="fas fa-arrow-left me-2"></i>Back to Orders
-                            </a>
-                        </div>
+                    </div>
+                    <div class="product-summary-text">
+                        <h3>{{ $order->product->name ?? 'Product' }}</h3>
+                        <p class="muted">Quantity: {{ $order->quantity }}</p>
+                        <p class="price">${{ number_format($order->total_amount ?? 0, 2) }}</p>
                     </div>
                 </div>
+
+                <dl class="detail-list">
+                    <div>
+                        <dt><i class="fas fa-tag"></i> Unit price</dt>
+                        <dd>${{ number_format($order->product->price ?? 0, 2) }}</dd>
+                    </div>
+                    <div>
+                        <dt><i class="fas fa-hashtag"></i> Quantity</dt>
+                        <dd>{{ $order->quantity }}</dd>
+                    </div>
+                    <div class="is-total">
+                        <dt><i class="fas fa-dollar-sign"></i> Total amount</dt>
+                        <dd>${{ number_format($order->total_amount ?? 0, 2) }}</dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-5">
+            <div class="panel">
+                <div class="panel-head">
+                    <h2><i class="fas fa-truck-fast"></i> Shipping &amp; payment</h2>
+                </div>
+                <dl class="detail-list">
+                    <div>
+                        <dt><i class="fas fa-user"></i> Customer</dt>
+                        <dd>{{ $order->user->name ?? 'Guest' }}</dd>
+                    </div>
+                    <div>
+                        <dt><i class="fas fa-location-dot"></i> Shipping address</dt>
+                        <dd class="wrap">{{ $order->shipping_address ?? '—' }}</dd>
+                    </div>
+                    <div>
+                        <dt><i class="fas fa-credit-card"></i> Payment method</dt>
+                        <dd>{{ ucfirst($order->payment_method ?? '—') }}</dd>
+                    </div>
+                    <div>
+                        <dt><i class="fas fa-route"></i> Tracking number</dt>
+                        <dd>{{ $order->tracking_number ?? 'Not available' }}</dd>
+                    </div>
+                </dl>
+            </div>
+
+            <div class="action-row mt-4">
+                <a href="{{ route('front.orders.index') }}" class="btn btn-brand-outline">
+                    <i class="fas fa-arrow-left me-1"></i>Back to orders
+                </a>
+                @if(isset($editRoute) && $statusKey === 'pending')
+                    <a href="{{ $editRoute }}" class="btn btn-brand">
+                        <i class="fas fa-pen me-1"></i>Edit order
+                    </a>
+                @endif
             </div>
         </div>
     </div>
 </div>
 
 <style>
-    /* Hover & Responsive Fluidity */
-    .card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12) !important;
-        transition: all 0.3s ease;
+    .order-show-page {
+        --green-700: #047857;
+        --green-600: #059669;
+        --green-500: #10b981;
+        --mint:      #ecf8f2;
+        --ink:       #14231c;
+        --muted:     #5f7168;
+        --line:      #dfe9e3;
+        --radius:    16px;
+        color: var(--ink);
+    }
+    .order-show-page .breadcrumb { --bs-breadcrumb-divider-color: #aab5af; }
+    .order-show-page .breadcrumb a { color: var(--green-700); text-decoration: none; }
+    .order-show-page .breadcrumb a:hover { text-decoration: underline; }
+
+    .page-hero {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.5rem 2rem;
+        flex-wrap: wrap;
+        padding: 1.6rem 2rem;
+        border-radius: var(--radius);
+        background:
+            radial-gradient(120% 160% at 100% 0%, rgba(255,255,255,.28) 0%, rgba(255,255,255,0) 45%),
+            linear-gradient(120deg, #047857 0%, #059669 55%, #10b981 100%);
+        color: #fff;
+        box-shadow: 0 16px 34px rgba(4, 120, 87, .22);
+        margin-bottom: 1.5rem;
+    }
+    .page-hero__eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        font-size: .75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        padding: .3rem .7rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, .18);
+        margin-bottom: .7rem;
+    }
+    .page-hero__title { font-size: clamp(1.6rem, 3vw, 2.1rem); font-weight: 800; margin: 0 0 .3rem; }
+    .page-hero__subtitle { margin: 0; opacity: .9; }
+
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        padding: .4rem .9rem;
+        border-radius: 999px;
+        font-size: .78rem;
+        font-weight: 700;
+        background: #eef1ef;
+        color: #44554c;
+        white-space: nowrap;
+    }
+    .status-pill::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: currentColor;
+    }
+    .status-pill.is-pending   { background: #fef3c7; color: #92400e; }
+    .status-pill.is-shipped   { background: #dbeafe; color: #1e40af; }
+    .status-pill.is-delivered { background: #dcfce7; color: #166534; }
+    .status-pill.is-cancelled { background: #fee2e2; color: #991b1b; }
+    .status-pill.on-hero { background: rgba(255,255,255,.92); }
+
+    .panel {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        overflow: hidden;
+        height: 100%;
+    }
+    .panel-head {
+        padding: .95rem 1.25rem;
+        border-bottom: 1px solid var(--line);
+        background: var(--mint);
+    }
+    .panel-head h2 {
+        font-size: 1rem;
+        font-weight: 700;
+        margin: 0;
+        color: var(--green-700);
+        display: flex;
+        align-items: center;
+        gap: .5rem;
     }
 
-    .btn:hover {
-        transform: translateY(-1px);
-        transition: all 0.2s ease;
+    .product-summary {
+        display: flex;
+        gap: 1rem;
+        padding: 1.25rem;
+        border-bottom: 1px solid var(--line);
     }
-
-    @media (max-width: 768px) {
-        .row > .col-md-6 {
-            margin-bottom: 2rem;
-        }
-        .space-y-4 > * { 
-            margin-bottom: 1rem !important; 
-        }
-        .d-flex.gap-2 { 
-            flex-direction: column; 
-        }
-        .btn { 
-            width: 100%; 
-            margin-bottom: 0.5rem; 
-        }
+    .product-thumb {
+        width: 90px;
+        height: 90px;
+        flex-shrink: 0;
+        border-radius: 12px;
+        background: var(--mint);
+        color: var(--green-500);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        overflow: hidden;
     }
+    .product-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .product-summary-text h3 { font-size: 1.1rem; font-weight: 700; margin: 0 0 .3rem; }
+    .product-summary-text .muted { color: var(--muted); margin: 0; font-size: .88rem; }
+    .product-summary-text .price { color: var(--green-700); font-size: 1.3rem; font-weight: 800; margin: .35rem 0 0; }
 
-    /* Custom badge styles */
-    .badge {
-        font-size: 0.75rem;
-        padding: 0.4em 0.7em;
-        border-radius: 0.375rem;
+    .detail-list { margin: 0; }
+    .detail-list > div {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: .85rem 1.25rem;
+        border-bottom: 1px solid var(--line);
+        font-size: .9rem;
+    }
+    .detail-list > div:last-child { border-bottom: 0; }
+    .detail-list dt { font-weight: 500; color: var(--muted); display: flex; align-items: center; gap: .5rem; }
+    .detail-list dt i { color: var(--green-500); width: 14px; text-align: center; }
+    .detail-list dd { margin: 0; font-weight: 600; text-align: right; }
+    .detail-list dd.wrap { max-width: 60%; }
+    .detail-list > div.is-total dd { color: var(--green-700); font-weight: 800; font-size: 1.1rem; }
+
+    .action-row { display: flex; gap: .6rem; flex-wrap: wrap; }
+    .action-row .btn { flex: 1 1 auto; }
+
+    .btn-brand {
+        background: var(--green-700);
+        border: 1px solid var(--green-700);
+        color: #fff;
+        font-weight: 600;
+        padding: .65rem 1.25rem;
+        border-radius: 10px;
+        transition: background .2s ease, box-shadow .2s ease;
+    }
+    .btn-brand:hover, .btn-brand:focus-visible {
+        background: var(--green-600);
+        border-color: var(--green-600);
+        color: #fff;
+        box-shadow: 0 6px 16px rgba(4, 120, 87, .25);
+    }
+    .btn-brand-outline {
+        background: #fff;
+        border: 1px solid var(--green-700);
+        color: var(--green-700);
+        font-weight: 600;
+        border-radius: 10px;
+        transition: background .2s ease, color .2s ease;
+    }
+    .btn-brand-outline:hover, .btn-brand-outline:focus-visible {
+        background: var(--green-700);
+        color: #fff;
+    }
+    .soft-alert { border: 0; border-radius: 12px; background: var(--mint); color: var(--green-700); margin-bottom: 1.25rem; }
+
+    @media (max-width: 575.98px) {
+        .page-hero { padding: 1.4rem; }
+        .detail-list dd.wrap { max-width: 55%; }
     }
 </style>
 @endsection

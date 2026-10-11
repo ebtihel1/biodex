@@ -263,7 +263,7 @@ $(document).ready(function () {
     // Quand on ouvre le modal -> vérifier si l'utilisateur a déjà rejoint
     $('#campaignModal').on('show.bs.modal', function (e) {
         const campaignId = $(e.relatedTarget).data('id');
-        $('#campaignModalBtn').attr('data-id', campaignId);
+        $('#campaignModalBtn').data('id', campaignId);
 
         @auth
         $.get(`/campaigns/${campaignId}/check`, function (res) {

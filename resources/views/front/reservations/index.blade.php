@@ -2,336 +2,604 @@
 @extends('front.layout')
 
 @section('content')
-<div class="container py-4">
-    <div class="text-center mb-5">
-        <h1 class="fw-bold text-success animate-fade-in">My Reservations</h1>
-        <p class="lead">Manage your product reservations for sustainability.</p>
-    </div>
+@php
+    // Conserve les filtres dans les liens de pagination
+    $reservations->withQueryString();
 
-    {{-- Prominent CTA Button at Top --}}
-    <div class="text-center mb-4">
-        <a href="{{ route('front.reservations.create') }}" class="btn btn-success btn-lg shadow-lg animate-pulse" style="background-color: #10b981; border-color: #10b981; color: white; font-weight: bold; padding: 12px 30px; transition: all 0.3s ease;">
-            <i class="fas fa-plus-circle me-2"></i>Make New Reservation
+    $statusMap = [
+        'pending'   => ['label' => 'Pending',   'class' => 'is-pending'],
+        'confirmed' => ['label' => 'Confirmed', 'class' => 'is-confirmed'],
+        'cancelled' => ['label' => 'Cancelled', 'class' => 'is-cancelled'],
+        'completed' => ['label' => 'Completed', 'class' => 'is-completed'],
+    ];
+
+    $totals = [
+        'total'     => (int) ($summary->total_count ?? $reservations->total()),
+        'pending'   => (int) ($summary->pending_count ?? 0),
+        'confirmed' => (int) ($summary->confirmed_count ?? 0),
+        'cancelled' => (int) ($summary->cancelled_count ?? 0),
+    ];
+
+    $hasFilters = request()->filled('date_from') || request()->filled('date_to') || request()->filled('product_search');
+@endphp
+
+<div class="container py-4 py-lg-5 reservations-page">
+
+    {{-- ===== Bannière ===== --}}
+    <section class="page-hero">
+        <div class="page-hero__text">
+            <span class="page-hero__eyebrow"><i class="fas fa-bookmark"></i> My picks</span>
+            <h1 class="page-hero__title">My reservations</h1>
+            <p class="page-hero__subtitle">Keep track of the products you've set aside.</p>
+        </div>
+        <a href="{{ route('front.reservations.create') }}" class="btn btn-brand">
+            <i class="fas fa-plus me-2"></i>New reservation
         </a>
-    </div>
+    </section>
 
-    {{-- Search and Filter Section --}}
-    <div class="row justify-content-center mb-4">
-        <div class="col-12 col-lg-10">
-            <div class="card shadow-sm animate-slide-up">
-                <div class="card-body">
-                    <form method="GET" action="{{ route('front.reservations.index') }}" class="row g-3">
-                        <div class="col-md-3">
-                            <label for="date_from" class="form-label fw-semibold">From Date</label>
-                            <input type="date" name="date_from" id="date_from" class="form-control" 
-                                   value="{{ request('date_from') }}" max="{{ now()->format('Y-m-d') }}">
-                        </div>
-                        <div class="col-md-3">
-                            <label for="date_to" class="form-label fw-semibold">To Date</label>
-                            <input type="date" name="date_to" id="date_to" class="form-control" 
-                                   value="{{ request('date_to') }}" max="{{ now()->format('Y-m-d') }}">
-                        </div>
-                        <div class="col-md-3">
-                            <label for="product_search" class="form-label fw-semibold">Product Search</label>
-                            <input type="text" name="product_search" id="product_search" class="form-control" 
-                                   value="{{ request('product_search') }}" placeholder="Search products...">
-                        </div>
-                        <div class="col-md-3">
-                            <div class="d-flex flex-column flex-md-row gap-2 h-100 align-items-start align-items-md-end justify-content-md-end">
-                                <button type="submit" class="btn btn-outline-success w-100 w-md-auto">
-                                    <i class="fas fa-filter me-1"></i>Filter
-                                </button>
-                                <a href="{{ route('front.reservations.index') }}" class="btn btn-secondary w-100 w-md-auto">
-                                    <i class="fas fa-refresh me-1"></i>Clear
-                                </a>
-                            </div>
-                        </div>
-                    </form>
-                </div>
+    {{-- ===== Statistiques ===== --}}
+    <section class="stats-row" aria-label="Reservation summary">
+        <div class="stat-card">
+            <span class="stat-icon"><i class="fas fa-layer-group"></i></span>
+            <div>
+                <span class="stat-value">{{ number_format($totals['total']) }}</span>
+                <span class="stat-label">Total reservations</span>
             </div>
         </div>
-    </div>
+        <div class="stat-card is-pending">
+            <span class="stat-icon"><i class="fas fa-hourglass-half"></i></span>
+            <div>
+                <span class="stat-value">{{ number_format($totals['pending']) }}</span>
+                <span class="stat-label">Pending</span>
+            </div>
+        </div>
+        <div class="stat-card is-confirmed">
+            <span class="stat-icon"><i class="fas fa-circle-check"></i></span>
+            <div>
+                <span class="stat-value">{{ number_format($totals['confirmed']) }}</span>
+                <span class="stat-label">Confirmed</span>
+            </div>
+        </div>
+        <div class="stat-card is-cancelled">
+            <span class="stat-icon"><i class="fas fa-circle-xmark"></i></span>
+            <div>
+                <span class="stat-value">{{ number_format($totals['cancelled']) }}</span>
+                <span class="stat-label">Cancelled</span>
+            </div>
+        </div>
+    </section>
 
-    {{-- Success Message --}}
+    {{-- ===== Flash ===== --}}
     @if (session('success'))
-        <div class="alert alert-success alert-dismissible fade show animate-slide-up" role="alert">
+        <div class="alert alert-success alert-dismissible fade show soft-alert" role="alert">
             <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
 
-    {{-- Reservations Grid --}}
-    <div class="row g-3 g-md-4">
-        @if($reservations->isEmpty())
-            <div class="col-12">
-                <div class="card shadow animate-slide-up">
-                    <div class="card-body text-center py-5">
-                        <div class="text-muted mb-3">
-                            <i class="fas fa-calendar-times fa-3x mb-3"></i>
-                        </div>
-                        <h5 class="card-title text-muted mb-3">No Reservations Found</h5>
-                        <p class="card-text text-muted mb-4">You haven't made any reservations yet.</p>
-                        <a href="{{ route('front.reservations.create') }}" class="btn btn-success">
-                            <i class="fas fa-plus-circle me-2"></i>Create Your First Reservation
-                        </a>
-                    </div>
-                </div>
-            </div>
-        @else
-            @foreach($reservations as $index => $reservation)
-                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-                    <div class="card shadow h-100 border-light reservation-card animate-fade-in-up stagger-{{ ($index % 12) + 1 }}" 
-                         style="transition: transform 0.3s ease, box-shadow 0.3s ease;">
-                    
-                        {{-- Reservation Status Badge --}}
-                        <div class="position-absolute top-0 end-0 m-2">
-                            <span class="badge @switch($reservation->status->value)
-                                @case('active') bg-success @break
-                                @case('expired') bg-warning @break
-                                @case('cancelled') bg-danger @break
-                                @default bg-secondary
-                            @endswitch">
-                                {{ $reservation->status->value }}
-                            </span>
-                        </div>
-
-                        {{-- Reservation Image/Icon --}}
-                        <div class="card-img-top d-flex align-items-center justify-content-center bg-light text-success" 
-                             style="height: 140px; border-bottom: 1px solid #e9ecef;">
-                            <i class="fas fa-calendar-check fa-3x"></i>
-                        </div>
-
-                        <div class="card-body d-flex flex-column">
-                            <h6 class="card-title text-dark mb-3">
-                                <i class="fas fa-hashtag text-muted me-1"></i>Reservation #{{ $reservation->id }}
-                            </h6>
-                            
-                            <div class="reservation-details flex-grow-1">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <small class="text-muted">Product:</small>
-                                    <span class="fw-semibold text-end">{{ \App\Http\Controllers\ReservationController::getProductName($reservation->product_id) }}</span>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <small class="text-muted">Quantity:</small>
-                                    <span class="fw-semibold">{{ $reservation->quantity }}</span>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <small class="text-muted">Until:</small>
-                                    <span class="fw-semibold">{{ $reservation->reserved_until->format('M d, Y') }}</span>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <small class="text-muted">Date:</small>
-                                    <small class="text-muted">{{ $reservation->created_at->format('M d, Y') }}</small>
-                                </div>
-                            </div>
-
-                            <div class="mt-auto pt-2">
-                                <a href="{{ route('front.reservations.show', $reservation) }}" class="btn btn-outline-success btn-sm w-100">
-                                    <i class="fas fa-eye me-1"></i>View Details
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            @endforeach
-        @endif
-    </div>
-
-    {{-- Pagination --}}
-    @if($reservations->hasPages())
-    <div class="row justify-content-center mt-5">
-        <div class="col-12">
-            <div class="d-flex justify-content-center">
-                <nav aria-label="Page navigation">
-                    <ul class="pagination shadow-sm">
-                        {{-- Previous Page Link --}}
-                        @if ($reservations->onFirstPage())
-                            <li class="page-item disabled">
-                                <span class="page-link" style="background-color: #f8f9fa; border-color: #dee2e6; color: #6c757d; padding: 10px 20px;">
-                                    <i class="fas fa-chevron-left me-1"></i>Previous
-                                </span>
-                            </li>
-                        @else
-                            <li class="page-item">
-                                <a class="page-link" href="{{ $reservations->previousPageUrl() }}" 
-                                   style="background-color: #10b981; border-color: #10b981; color: white; font-weight: bold; padding: 10px 20px; transition: all 0.3s ease;">
-                                    <i class="fas fa-chevron-left me-1"></i>Previous
-                                </a>
-                            </li>
-                        @endif
-
-                        {{-- Pagination Elements --}}
-                        @foreach ($reservations->getUrlRange(1, $reservations->lastPage()) as $page => $url)
-                            @if ($page == $reservations->currentPage())
-                                <li class="page-item active">
-                                    <span class="page-link" style="background-color: #10b981; border-color: #10b981; font-weight: bold; padding: 10px 15px;">
-                                        {{ $page }}
-                                    </span>
-                                </li>
-                            @else
-                                <li class="page-item">
-                                    <a class="page-link" href="{{ $url }}" 
-                                       style="background-color: white; border-color: #10b981; color: #10b981; font-weight: bold; padding: 10px 15px; transition: all 0.3s ease;">
-                                        {{ $page }}
-                                    </a>
-                                </li>
-                            @endif
-                        @endforeach
-
-                        {{-- Next Page Link --}}
-                        @if ($reservations->hasMorePages())
-                            <li class="page-item">
-                                <a class="page-link" href="{{ $reservations->nextPageUrl() }}" 
-                                   style="background-color: #10b981; border-color: #10b981; color: white; font-weight: bold; padding: 10px 20px; transition: all 0.3s ease;">
-                                    Next<i class="fas fa-chevron-right ms-1"></i>
-                                </a>
-                            </li>
-                        @else
-                            <li class="page-item disabled">
-                                <span class="page-link" style="background-color: #f8f9fa; border-color: #dee2e6; color: #6c757d; padding: 10px 20px;">
-                                    Next<i class="fas fa-chevron-right ms-1"></i>
-                                </span>
-                            </li>
-                        @endif
-                    </ul>
-                </nav>
+    {{-- ===== Filtres ===== --}}
+    <form method="GET" action="{{ route('front.reservations.index') }}" class="filter-bar" role="search">
+        <div class="filter-field">
+            <label for="product_search" class="form-label">Product</label>
+            <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                <input type="text" name="product_search" id="product_search" class="form-control"
+                       value="{{ request('product_search') }}" placeholder="Search by product name">
             </div>
         </div>
+        <div class="filter-field">
+            <label for="date_from" class="form-label">From</label>
+            <input type="date" name="date_from" id="date_from" class="form-control"
+                   value="{{ request('date_from') }}" max="{{ now()->format('Y-m-d') }}">
+        </div>
+        <div class="filter-field">
+            <label for="date_to" class="form-label">To</label>
+            <input type="date" name="date_to" id="date_to" class="form-control"
+                   value="{{ request('date_to') }}" max="{{ now()->format('Y-m-d') }}">
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-brand">
+                <i class="fas fa-filter me-1"></i>Filter
+            </button>
+            @if($hasFilters)
+                <a href="{{ route('front.reservations.index') }}" class="btn btn-link link-clear">Clear</a>
+            @endif
+        </div>
+    </form>
+
+    {{-- ===== Compteur ===== --}}
+    @unless($reservations->isEmpty())
+        <div class="result-meta">
+            <span><strong>{{ $reservations->total() }}</strong> {{ Str::plural('reservation', $reservations->total()) }}</span>
+            <span>Showing {{ $reservations->firstItem() }}–{{ $reservations->lastItem() }}</span>
+        </div>
+    @endunless
+
+    {{-- ===== Grille ===== --}}
+    <div class="row g-3 g-lg-4">
+        @forelse($reservations as $reservation)
+            @php
+                $statusKey = $reservation->status->value ?? $reservation->status;
+                $status    = $statusMap[$statusKey] ?? ['label' => ucfirst($statusKey), 'class' => 'is-default'];
+                $isOpen    = in_array($statusKey, ['pending', 'confirmed'], true);
+                $daysLeft  = $isOpen && $reservation->reserved_until
+                    ? now()->startOfDay()->diffInDays($reservation->reserved_until->copy()->startOfDay(), false)
+                    : null;
+                $soon      = $isOpen && $daysLeft !== null && $daysLeft >= 0 && $daysLeft <= 2;
+                $productName = $reservation->product->name ?? ('Product #' . $reservation->product_id);
+            @endphp
+
+            <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+                <article class="reservation-card">
+                    <div class="reservation-head">
+                        <span class="reservation-icon"><i class="fas fa-calendar-check"></i></span>
+                        <span class="status-pill {{ $status['class'] }}">{{ $status['label'] }}</span>
+                    </div>
+
+                    <div class="reservation-body">
+                        <h2 class="reservation-title" title="{{ $productName }}">{{ Str::limit($productName, 40) }}</h2>
+
+                        <dl class="reservation-meta">
+                            <div>
+                                <dt>Quantity</dt>
+                                <dd>{{ $reservation->quantity }}</dd>
+                            </div>
+                            <div>
+                                <dt>Reserved until</dt>
+                                <dd>{{ $reservation->reserved_until?->format('M d, Y') ?? '—' }}</dd>
+                            </div>
+                            <div>
+                                <dt>Created</dt>
+                                <dd class="is-soft">{{ $reservation->created_at->format('M d, Y') }}</dd>
+                            </div>
+                        </dl>
+
+                        @if($soon)
+                            <p class="expiry-note">
+                                <i class="fas fa-clock"></i>
+                                {{ $daysLeft === 0 ? 'Expires today' : 'Expires in ' . $daysLeft . ' ' . Str::plural('day', $daysLeft) }}
+                            </p>
+                        @endif
+
+                        <a href="{{ route('front.reservations.show', $reservation) }}" class="btn btn-brand-outline btn-sm w-100 mt-auto">
+                            View details <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </article>
+            </div>
+        @empty
+            <div class="col-12">
+                <div class="empty-state">
+                    <i class="fas fa-calendar-times"></i>
+                    @if($hasFilters)
+                        <h2>No reservations match your filters</h2>
+                        <p>Try a wider date range or a different search term.</p>
+                        <a href="{{ route('front.reservations.index') }}" class="btn btn-brand-outline">Clear filters</a>
+                    @else
+                        <h2>No reservations yet</h2>
+                        <p>Reserve a product and it will show up here.</p>
+                        <a href="{{ route('front.reservations.create') }}" class="btn btn-brand">
+                            <i class="fas fa-plus me-2"></i>Make your first reservation
+                        </a>
+                    @endif
+                </div>
+            </div>
+        @endforelse
     </div>
+
+    {{-- ===== Pagination ===== --}}
+    @if($reservations->hasPages())
+        <nav class="mt-5" aria-label="Reservations pagination">
+            <ul class="pagination pagination-modern justify-content-center">
+                <li class="page-item {{ $reservations->onFirstPage() ? 'disabled' : '' }}">
+                    @if($reservations->onFirstPage())
+                        <span class="page-link"><i class="fas fa-chevron-left me-1"></i>Previous</span>
+                    @else
+                        <a class="page-link" href="{{ $reservations->previousPageUrl() }}" rel="prev">
+                            <i class="fas fa-chevron-left me-1"></i>Previous
+                        </a>
+                    @endif
+                </li>
+
+                @foreach ($reservations->getUrlRange(1, $reservations->lastPage()) as $page => $url)
+                    <li class="page-item {{ $page == $reservations->currentPage() ? 'active' : '' }}">
+                        @if($page == $reservations->currentPage())
+                            <span class="page-link" aria-current="page">{{ $page }}</span>
+                        @else
+                            <a class="page-link" href="{{ $url }}">{{ $page }}</a>
+                        @endif
+                    </li>
+                @endforeach
+
+                <li class="page-item {{ $reservations->hasMorePages() ? '' : 'disabled' }}">
+                    @if($reservations->hasMorePages())
+                        <a class="page-link" href="{{ $reservations->nextPageUrl() }}" rel="next">
+                            Next<i class="fas fa-chevron-right ms-1"></i>
+                        </a>
+                    @else
+                        <span class="page-link">Next<i class="fas fa-chevron-right ms-1"></i></span>
+                    @endif
+                </li>
+            </ul>
+        </nav>
     @endif
 </div>
 
 <style>
-    /* Staggered Card Animations */
-    @keyframes fadeInUpStagger {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+    .reservations-page {
+        --green-700: #047857;
+        --green-600: #059669;
+        --green-500: #10b981;
+        --mint:      #ecf8f2;
+        --ink:       #14231c;
+        --muted:     #5f7168;
+        --line:      #dfe9e3;
+        --radius:    16px;
+        color: var(--ink);
     }
 
-    /* Stagger delays for cards */
-    .stagger-1 { animation: fadeInUpStagger 0.5s ease-out 0.1s both; }
-    .stagger-2 { animation: fadeInUpStagger 0.5s ease-out 0.2s both; }
-    .stagger-3 { animation: fadeInUpStagger 0.5s ease-out 0.3s both; }
-    .stagger-4 { animation: fadeInUpStagger 0.5s ease-out 0.4s both; }
-    .stagger-5 { animation: fadeInUpStagger 0.5s ease-out 0.5s both; }
-    .stagger-6 { animation: fadeInUpStagger 0.5s ease-out 0.6s both; }
-    .stagger-7 { animation: fadeInUpStagger 0.5s ease-out 0.7s both; }
-    .stagger-8 { animation: fadeInUpStagger 0.5s ease-out 0.8s both; }
-    .stagger-9 { animation: fadeInUpStagger 0.5s ease-out 0.9s both; }
-    .stagger-10 { animation: fadeInUpStagger 0.5s ease-out 1.0s both; }
-    .stagger-11 { animation: fadeInUpStagger 0.5s ease-out 1.1s both; }
-    .stagger-12 { animation: fadeInUpStagger 0.5s ease-out 1.2s both; }
-
-    /* Card Hover Effects */
-    .reservation-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.15) !important;
-        border-color: #10b981 !important;
+    /* ===== Bannière ===== */
+    .page-hero {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.5rem 2rem;
+        flex-wrap: wrap;
+        padding: 1.75rem 2rem;
+        border-radius: var(--radius);
+        background:
+            radial-gradient(120% 160% at 100% 0%, rgba(255,255,255,.28) 0%, rgba(255,255,255,0) 45%),
+            linear-gradient(120deg, #047857 0%, #059669 55%, #10b981 100%);
+        color: #fff;
+        box-shadow: 0 16px 34px rgba(4, 120, 87, .22);
+        margin-bottom: 1.25rem;
+    }
+    .page-hero__eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        font-size: .75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        padding: .3rem .7rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, .18);
+        margin-bottom: .7rem;
+    }
+    .page-hero__title {
+        font-size: clamp(1.7rem, 3vw, 2.3rem);
+        font-weight: 800;
+        letter-spacing: -.02em;
+        margin: 0 0 .3rem;
+    }
+    .page-hero__subtitle { margin: 0; opacity: .9; }
+    .page-hero .btn-brand {
+        background: #fff;
+        border-color: #fff;
+        color: var(--green-700);
+    }
+    .page-hero .btn-brand:hover,
+    .page-hero .btn-brand:focus-visible {
+        background: var(--mint);
+        border-color: var(--mint);
+        color: var(--green-700);
+        box-shadow: 0 8px 18px rgba(0, 0, 0, .18);
     }
 
-    /* Pagination Hover Effects */
-    .page-link:hover:not(.disabled):not(.active) {
+    /* ===== Statistiques ===== */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: .9rem;
+        margin-bottom: 1.25rem;
+    }
+    .stat-card {
+        display: flex;
+        align-items: center;
+        gap: .85rem;
+        padding: .95rem 1.1rem;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease;
+    }
+    .stat-card:hover {
+        border-color: var(--green-500);
         transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        box-shadow: 0 10px 22px rgba(16, 185, 129, .12);
+    }
+    .stat-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: var(--mint);
+        color: var(--green-700);
+        font-size: 1.05rem;
+        flex-shrink: 0;
+    }
+    .stat-value {
+        display: block;
+        font-size: 1.4rem;
+        font-weight: 800;
+        line-height: 1.1;
+        color: var(--ink);
+    }
+    .stat-label {
+        display: block;
+        font-size: .78rem;
+        color: var(--muted);
+    }
+    .stat-card.is-pending   .stat-icon { background: #fef3c7; color: #92400e; }
+    .stat-card.is-confirmed .stat-icon { background: #dcfce7; color: #166534; }
+    .stat-card.is-cancelled .stat-icon { background: #fee2e2; color: #991b1b; }
+
+    /* ===== Boutons ===== */
+    .btn-brand {
+        background: var(--green-700);
+        border: 1px solid var(--green-700);
+        color: #fff;
+        font-weight: 600;
+        padding: .65rem 1.25rem;
+        border-radius: 10px;
+        transition: background .2s ease, box-shadow .2s ease;
+    }
+    .btn-brand:hover, .btn-brand:focus-visible {
+        background: var(--green-600);
+        border-color: var(--green-600);
+        color: #fff;
+        box-shadow: 0 6px 16px rgba(4, 120, 87, .25);
+    }
+    .btn-brand-outline {
+        background: #fff;
+        border: 1px solid var(--green-700);
+        color: var(--green-700);
+        font-weight: 600;
+        border-radius: 10px;
+        transition: background .2s ease, color .2s ease;
+    }
+    .btn-brand-outline:hover, .btn-brand-outline:focus-visible {
+        background: var(--green-700);
+        color: #fff;
+    }
+    .link-clear { color: var(--muted); text-decoration: none; }
+    .link-clear:hover { color: var(--ink); text-decoration: underline; }
+
+    .soft-alert { border: 0; border-radius: 12px; background: var(--mint); color: var(--green-700); }
+
+    /* ===== Filtres ===== */
+    .filter-bar {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr auto;
+        gap: 1rem;
+        align-items: end;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+    .filter-bar .form-label {
+        font-size: .8rem;
+        font-weight: 600;
+        color: var(--muted);
+        margin-bottom: .3rem;
+    }
+    .filter-bar .form-control,
+    .filter-bar .input-group-text {
+        border-color: var(--line);
+        border-radius: 10px;
+    }
+    .filter-bar .input-group .form-control { border-top-left-radius: 0; border-bottom-left-radius: 0; }
+    .filter-bar .input-group-text { background: var(--mint); color: var(--green-700); border-top-right-radius: 0; border-bottom-right-radius: 0; }
+    .filter-bar .form-control:focus {
+        border-color: var(--green-500);
+        box-shadow: 0 0 0 .2rem rgba(16, 185, 129, .18);
+    }
+    .filter-actions { display: flex; align-items: center; gap: .5rem; }
+
+    /* ===== Compteur ===== */
+    .result-meta {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: .5rem;
+        margin-bottom: 1rem;
+        color: var(--muted);
+        font-size: .9rem;
+    }
+    .result-meta strong { color: var(--ink); }
+
+    /* ===== Carte ===== */
+    .reservation-card {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        overflow: hidden;
+        transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+    }
+    .reservation-card:hover {
+        border-color: var(--green-500);
+        transform: translateY(-4px);
+        box-shadow: 0 14px 28px rgba(16, 185, 129, .16);
+    }
+    .reservation-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .5rem;
+        padding: .9rem 1.1rem;
+        background: var(--mint);
+        border-bottom: 1px solid var(--line);
+    }
+    .reservation-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: #fff;
+        color: var(--green-700);
+        font-size: 1rem;
     }
 
-    /* Base Animations */
-    .animate-fade-in {
-        animation: fadeIn 0.6s ease-in-out;
+    .reservation-body {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        padding: 1rem 1.1rem 1.1rem;
     }
-    
-    .animate-slide-up {
-        animation: slideUp 0.5s ease-out;
+    .reservation-title {
+        font-size: 1.05rem;
+        font-weight: 700;
+        line-height: 1.3;
+        margin: 0 0 .2rem;
+        color: var(--ink);
     }
-    
-    .animate-fade-in-up {
-        animation: fadeInUp 0.6s ease-out;
-    }
-    
-    .animate-pulse {
-        animation: pulse 2s infinite;
-    }
-
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-    
-    @keyframes slideUp {
-        from { 
-            transform: translateY(20px); 
-            opacity: 0; 
-        }
-        to { 
-            transform: translateY(0); 
-            opacity: 1; 
-        }
-    }
-    
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    @keyframes pulse {
-        0%, 100% { 
-            transform: scale(1); 
-        }
-        50% { 
-            transform: scale(1.05); 
-        }
+    .reservation-ref {
+        display: inline-flex;
+        align-items: center;
+        gap: .25rem;
+        margin: 0 0 .9rem;
+        font-size: .82rem;
+        color: var(--muted);
     }
 
-    /* Responsive Design */
-    @media (max-width: 576px) {
-        .card-body { 
-            padding: 1rem !important; 
-        }
-        .card-title { 
-            font-size: 1rem !important; 
-        }
-        .reservation-card .btn { 
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-        }
-        .pagination {
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        .page-link {
-            padding: 8px 15px !important;
-            font-size: 0.875rem;
-        }
+    .reservation-meta {
+        margin: 0 0 1rem;
+        border-top: 1px solid var(--line);
     }
-    
-    @media (max-width: 768px) {
-        .col-md-3 {
-            margin-bottom: 1rem;
-        }
+    .reservation-meta > div {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: .5rem 0;
+        border-bottom: 1px solid var(--line);
+        font-size: .875rem;
     }
-    
-    @media (min-width: 1200px) {
-        .card-img-top { 
-            height: 160px !important; 
-        }
+    .reservation-meta dt { font-weight: 400; color: var(--muted); }
+    .reservation-meta dd { margin: 0; font-weight: 600; text-align: right; }
+    .reservation-meta dd.is-soft { font-weight: 400; color: var(--muted); }
+
+    .expiry-note {
+        display: flex;
+        align-items: center;
+        gap: .45rem;
+        margin: 0 0 1rem;
+        padding: .45rem .7rem;
+        border-radius: 8px;
+        background: #fef3c7;
+        color: #92400e;
+        font-size: .82rem;
+        font-weight: 600;
     }
 
-    /* Custom badge styles */
-    .badge {
-        font-size: 0.7rem;
-        padding: 0.35em 0.65em;
+    /* ===== Statut ===== */
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        padding: .3rem .7rem;
+        border-radius: 999px;
+        font-size: .72rem;
+        font-weight: 700;
+        background: #eef1ef;
+        color: #44554c;
+        white-space: nowrap;
+    }
+    .status-pill::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: currentColor;
+    }
+    .status-pill.is-pending   { background: #fef3c7; color: #92400e; }
+    .status-pill.is-confirmed { background: #dcfce7; color: #166534; }
+    .status-pill.is-cancelled { background: #fee2e2; color: #991b1b; }
+    .status-pill.is-completed { background: #cffafe; color: #155e75; }
+
+    /* ===== Vide ===== */
+    .empty-state {
+        text-align: center;
+        padding: 3.5rem 1.5rem;
+        background: #fff;
+        border: 1px dashed var(--line);
+        border-radius: var(--radius);
+    }
+    .empty-state > i { font-size: 2.5rem; color: var(--green-500); margin-bottom: 1rem; }
+    .empty-state h2 { font-size: 1.2rem; font-weight: 700; margin-bottom: .35rem; }
+    .empty-state p { color: var(--muted); margin-bottom: 1.25rem; }
+
+    /* ===== Pagination ===== */
+    .pagination-modern { gap: 6px; flex-wrap: wrap; margin: 0; }
+    .pagination-modern .page-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 42px;
+        padding: .5rem .9rem;
+        border: 1px solid var(--line);
+        border-radius: 10px !important;
+        color: var(--green-700);
+        font-weight: 600;
+        font-size: .9rem;
+        background: #fff;
+        transition: background .2s ease, color .2s ease, border-color .2s ease;
+    }
+    .pagination-modern .page-link:hover,
+    .pagination-modern .page-link:focus-visible {
+        background: var(--mint);
+        border-color: var(--green-500);
+        color: var(--green-700);
+    }
+    .pagination-modern .page-item.active .page-link {
+        background: var(--green-700);
+        border-color: var(--green-700);
+        color: #fff;
+    }
+    .pagination-modern .page-item.disabled .page-link {
+        background: #f6f8f7;
+        color: #aab5af;
+        border-color: var(--line);
+    }
+
+    /* ===== Entrée douce ===== */
+    @media (prefers-reduced-motion: no-preference) {
+        .reservation-card { animation: cardIn .45s ease-out both; }
+        .col-12:nth-child(2) .reservation-card { animation-delay: .04s; }
+        .col-12:nth-child(3) .reservation-card { animation-delay: .08s; }
+        .col-12:nth-child(4) .reservation-card { animation-delay: .12s; }
+        .col-12:nth-child(n+5) .reservation-card { animation-delay: .16s; }
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: none; }
+        }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        * { transition: none !important; }
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 991.98px) {
+        .stats-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .filter-bar { grid-template-columns: 1fr 1fr; }
+        .filter-field:first-child { grid-column: 1 / -1; }
+        .filter-actions { grid-column: 1 / -1; }
+    }
+    @media (max-width: 575.98px) {
+        .page-hero { padding: 1.4rem; }
+        .page-hero .btn { width: 100%; }
+        .filter-bar { grid-template-columns: 1fr; padding: 1rem; }
+        .filter-actions .btn-brand { flex: 1; }
+        .pagination-modern .page-link { min-width: 36px; padding: .4rem .65rem; font-size: .82rem; }
     }
 </style>
 @endsection

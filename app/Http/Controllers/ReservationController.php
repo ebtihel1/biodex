@@ -384,7 +384,11 @@ class ReservationController extends Controller
     // ======================= HELPERS =======================
     protected function filteredQuery(Request $request): Builder
     {
-        $query = Reservation::query()->with(['user']);
+        $query = Reservation::query()->with(['user', 'product']);
+
+        if ($this->isFrontRoute()) {
+            $query->where('user_id', Auth::id() ?? 0);
+        }
 
         if ($search = trim((string) $request->query('search', ''))) {
             $query->where(function (Builder $q) use ($search) {

@@ -2,6 +2,21 @@
 
 @section('content')
 <div class="container my-5">
+    <!-- Flash messages -->
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>{{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
     <!-- En-tête -->
     <div class="row mb-4">
         <div class="col-12 text-center mb-4">
@@ -139,11 +154,19 @@
                                 </div>
                             </div>
 
-                            <!-- Bouton -->
+                            <!-- Boutons -->
                             <a href="{{ route('front.products.show', $product->id) }}" 
                                class="btn btn-outline-success w-100">
                                 <i class="bi bi-eye me-1"></i> View Details
                             </a>
+                            @auth
+                                <form action="{{ route('front.products.add-to-cart', $product) }}" method="POST" class="mt-2">
+                                    @csrf
+                                    <button type="submit" class="btn btn-success w-100">
+                                        <i class="bi bi-cart-plus me-1"></i> Add to Cart
+                                    </button>
+                                </form>
+                            @endauth
                         </div>
                     </div>
                 </div>

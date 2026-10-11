@@ -9,6 +9,21 @@ use Illuminate\Support\Facades\Auth;
 
 class ParticipationController extends Controller
 {
+    public function check($campaignId)
+    {
+        $joined = false;
+
+        if (Auth::check()) {
+            $user = Auth::user();
+            $joined = Campaign::findOrFail($campaignId)
+                ->participations()
+                ->where('user_id', $user->id)
+                ->exists();
+        }
+
+        return response()->json(['joined' => $joined]);
+    }
+
     public function toggle($campaignId)
     {
         $user = Auth::user();

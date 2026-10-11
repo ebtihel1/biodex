@@ -295,6 +295,9 @@ Route::prefix('ai/recycling')->group(function () {
 // =============================================================
 Route::get('/shop/products', [ProductFrontController::class, 'index'])->name('front.products.index');
 Route::get('/shop/products/{id}', [ProductFrontController::class, 'show'])->name('front.products.show');
+Route::post('/shop/products/{product}/add-to-cart', [ProductFrontController::class, 'addToCart'])
+    ->name('front.products.add-to-cart')
+    ->middleware('auth');
 
 // =============================================================
 // Static pages
@@ -367,3 +370,8 @@ Route::get('/campaigns/export/csv', [CampaignController::class, 'exportCsv'])->n
 Route::get('/campaigns/export/pdf', [CampaignController::class, 'exportPdf'])->name('campaigns.export.pdf');
 Route::post('/campaigns/import', [CampaignController::class, 'importCsv'])->name('campaigns.import');
 Route::resource('campaigns', CampaignController::class);
+Route::post('/campaigns/{campaign}/toggle', [ParticipationController::class, 'toggle'])
+    ->name('campaigns.toggle')
+    ->middleware('auth');
+Route::get('/campaigns/{campaign}/check', [ParticipationController::class, 'check'])
+    ->name('campaigns.check');

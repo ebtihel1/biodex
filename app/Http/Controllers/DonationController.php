@@ -8,6 +8,7 @@ use App\Models\Donation;
 use App\Models\User;
 use App\Models\Waste;
 use App\Models\WasteCategory;
+use App\Notifications\DonationReceived;
 use App\Services\SentimentService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
@@ -202,6 +203,8 @@ class DonationController extends Controller
         }
 
         $donation = Donation::create($validated + ['status' => DonationStatus::Available]);
+
+        DonationReceived::create($donation);
 
         $service = new SentimentService();
         $sentiment = $service->analyzeSentiment($validated['description'] ?? '');

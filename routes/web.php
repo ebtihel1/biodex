@@ -1,5 +1,6 @@
 <?php
 use App\Http\Controllers\DonationController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\OrderController;
 use App\Livewire\Settings\Appearance;
@@ -100,6 +101,10 @@ Route::middleware(['auth'])->group(function () {
         $user = Auth::user();
         return view('back.profile', compact('user'));
     })->name('back.profile');
+
+    // Notifications
+    Route::get('/notifications/{notification}/read', [NotificationController::class, 'read'])->name('notifications.read');
+    Route::post('/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.readAll');
 });
 
 // ============================

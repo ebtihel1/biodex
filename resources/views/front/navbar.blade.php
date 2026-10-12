@@ -67,6 +67,7 @@
                 </li>
 
                @auth
+    @include('partials.notifications', ['tag' => 'li', 'tagClass' => 'nav-item dropdown', 'btnClass' => 'nav-link'])
     <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle text-light" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
             <i class="bi bi-person-circle me-1"></i> {{ Auth::user()->name }}

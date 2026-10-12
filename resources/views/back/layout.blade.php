@@ -355,6 +355,7 @@
             <div class="header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0"></h5>
                 <div class="d-flex align-items-center gap-3">
+                    @include('partials.notifications')
                     <a href="{{ route('back.profile') }}" class="header-profile text-decoration-none" aria-label="User Profile" title="Profile">
                         <i class="bi bi-person-circle fs-4"></i>
                     </a>

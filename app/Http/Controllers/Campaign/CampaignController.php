@@ -30,16 +30,59 @@ class CampaignController extends Controller
             'end_date' => 'required|date|after_or_equal:start_date',
             'status' => 'in:draft,active,closed',
             'user_id' => 'nullable|exists:users,id',
+            'deadline_registration' => 'nullable|date',
+            'city' => 'nullable|string|max:255',
+            'region' => 'nullable|string|max:255',
+            'participants_count' => 'nullable|integer|min:0',
         ]);
 
         $campaign = Campaign::create($validated);
         return response()->json($campaign, 201);
     }
 
+    // ============================================================
+    // Redirige vers la liste avec ouverture automatique du modal
+    // (le CRUD back-office est géré par des modals, pas des pages)
+    // ============================================================
+    public function create()
+    {
+        return redirect()->route('back.campaigns', ['create' => 1]);
+    }
+
+    public function edit($id)
+    {
+        Campaign::findOrFail($id);
+
+        return redirect()->route('back.campaigns', ['edit' => $id]);
+    }
+
+    // ============================================================
+    // API JSON — retourne une campagne (consommé par DataTables/Edit modal)
+    // ============================================================
     public function show($id)
     {
         $campaign = Campaign::with('user')->findOrFail($id);
         return response()->json($campaign);
+    }
+
+    // ============================================================
+    // VUE BLADE — page de détails d'une campagne (back-office)
+    // Utilisée par le bouton "View Details" dans la liste
+    // ============================================================
+    public function showView($id)
+    {
+        $campaign = Campaign::with(['user', 'participations.user'])->findOrFail($id);
+
+        $indexRoute = url('/back/campaigns');
+        $editRoute = url("/campaigns/{$campaign->id}/edit");
+        $destroyRoute = url("/campaigns/{$campaign->id}");
+
+        return view('back.campaign.show', compact(
+            'campaign',
+            'indexRoute',
+            'editRoute',
+            'destroyRoute'
+        ));
     }
 
     public function update(Request $request, $id)
@@ -53,18 +96,28 @@ class CampaignController extends Controller
             'start_date' => 'sometimes|date',
             'end_date' => 'sometimes|date|after_or_equal:start_date',
             'status' => 'in:draft,active,closed',
+            'deadline_registration' => 'nullable|date',
+            'city' => 'nullable|string|max:255',
+            'region' => 'nullable|string|max:255',
+            'participants_count' => 'nullable|integer|min:0',
         ]);
 
         $campaign->update($validated);
         return response()->json($campaign);
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $campaign = Campaign::findOrFail($id);
         $campaign->delete();
 
-        return response()->json(['message' => 'Campaign deleted successfully']);
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['message' => 'Campaign deleted successfully']);
+        }
+
+        return redirect()
+            ->route('back.campaigns')
+            ->with('success', 'Campaign deleted successfully.');
     }
 
     public function frontIndex()

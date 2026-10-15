@@ -478,7 +478,9 @@
     const spinner = document.getElementById('loadingSpinner');
     let chart;
     const points = new Map();
-    const pointLocations = new Map(@json($pointLocations ?? []));
+    const pointLocations = new Map(
+        Object.entries(@json($pointLocations ?? [])).map(([id, location]) => [Number(id), location])
+    );
 
     let aiMap = null;
     const mapMarkers = [];

@@ -22,7 +22,7 @@ class NotificationSeeder extends Seeder
             [6, 9, 'Objectif de poids atteint', 'Vous avez déposé 32 kg de verre, bravo pour votre engagement.', 'success', false, 'Waste', 3, '/wastess/3', 72],
             [7, 10, 'Ordinateur portable réservé', 'Votre réservation du portable est confirmée, à récupérer au point vert des Berges du Lac.', 'warning', false, 'Reservation', 3, '/biodex/reservations/3', 9],
             [8, 10, 'Donation en attente', 'Votre donation d’ordinateur portable pour études a été réservée par un particulier.', 'info', false, 'Donation', 3, '/biodex/donations/3', 21],
-            [9, 11, 'Réparation terminée', 'Votre appareil a été réparé et vous pouvez venir le récupérer.', 'success', true, 'Booking', 5, null, 4],
+            [9, 11, 'Nouveau produit disponible', 'Un nouveau produit recyclé a été ajouté au catalogue.', 'info', false, 'Product', 5, '/products/5', 4],
             [10, 12, 'Paiement en attente', 'Votre commande de cartons d’emballage attend toujours la validation du virement.', 'warning', false, 'Order', 6, '/biodex/orders/6', 3],
             [11, 13, 'Rappel de tri', 'Les films plastiques doivent être déposés séparément du plastique rigide.', 'info', false, 'WasteCategory', 1, '/categories/1', 11],
             [12, 14, 'Nouvelle participation', 'Vous vous êtes inscrit à la campagne de collecte des déchets électroniques.', 'info', false, 'Campaign', 4, '/campaignsFront', 2],

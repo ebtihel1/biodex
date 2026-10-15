@@ -382,9 +382,6 @@ form.d-inline { display: inline-flex; margin: 0; padding: 0; }
                                 <th><a class="sort-link" href="{{ $sortLink('name') }}">Name {!! $sortIcon('name') !!}</a></th>
                                 <th><a class="sort-link" href="{{ $sortLink('address') }}">Address {!! $sortIcon('address') !!}</a></th>
                                 <th><a class="sort-link" href="{{ $sortLink('city') }}">City {!! $sortIcon('city') !!}</a></th>
-                                <th><a class="sort-link" href="{{ $sortLink('postal_code') }}">Postal Code {!! $sortIcon('postal_code') !!}</a></th>
-                                <th><i class="bi bi-clock" aria-hidden="true"></i> Opening Hours</th>
-                                <th><i class="bi bi-tags" aria-hidden="true"></i> Categories</th>
                                 <th><a class="sort-link" href="{{ $sortLink('contact_phone') }}">Contact {!! $sortIcon('contact_phone') !!}</a></th>
                                 <th><a class="sort-link" href="{{ $sortLink('status') }}">Status {!! $sortIcon('status') !!}</a></th>
                                 <th><i class="bi bi-gear" aria-hidden="true"></i> Actions</th>
@@ -396,67 +393,13 @@ form.d-inline { display: inline-flex; margin: 0; padding: 0; }
                                     <td>{{ $collectionPoint->id }}</td>
                                     <td><strong>{{ $collectionPoint->name }}</strong></td>
                                     <td>
-                                        <span class="text-truncate d-inline-block" style="max-width: 200px;">
+                                        <span class="d-inline-block text-wrap"
+                                              style="max-width: 220px; white-space: normal; word-break: break-word;">
                                             {{ $collectionPoint->address }}
                                         </span>
                                     </td>
                                     <td>
                                         <span class="badge bg-light text-dark border">{{ $collectionPoint->city }}</span>
-                                    </td>
-                                    <td>
-                                        <code class="text-dark">{{ $collectionPoint->postal_code }}</code>
-                                    </td>
-                                    <td>
-                                        @php
-                                            $openingHours = $collectionPoint->opening_hours;
-                                            if (is_string($openingHours)) {
-                                                $openingHours = json_decode($openingHours, true);
-                                            }
-                                        @endphp
-
-                                        @if (is_array($openingHours) && !empty($openingHours))
-                                            @php
-                                                $hoursHtml = '<strong>Opening Hours:</strong><br>' .
-                                                    collect($openingHours)->map(fn($h) => '• ' . e($h))->implode('<br>');
-                                            @endphp
-                                            <button type="button"
-                                                    class="btn btn-sm btn-outline-info border-0"
-                                                    data-bs-toggle="tooltip"
-                                                    data-bs-html="true"
-                                                    aria-label="View opening hours"
-                                                    title="{{ $hoursHtml }}">
-                                                <i class="bi bi-clock" aria-hidden="true"></i>
-                                            </button>
-                                        @else
-                                            <span class="badge bg-secondary bg-opacity-25 text-secondary">Undefined</span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        @php
-                                            $categories = $collectionPoint->accepted_categories;
-                                            if (is_string($categories)) {
-                                                $categories = json_decode($categories, true);
-                                            }
-                                        @endphp
-
-                                        @if (is_array($categories) && !empty($categories))
-                                            <div class="d-flex flex-wrap gap-1 justify-content-center" style="max-width: 150px;">
-                                                @foreach(array_slice($categories, 0, 2) as $category)
-                                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 small">
-                                                        {{ $category }}
-                                                    </span>
-                                                @endforeach
-                                                @if(count($categories) > 2)
-                                                    <span class="badge bg-light text-muted border small"
-                                                          data-bs-toggle="tooltip"
-                                                          title="{{ e(implode(', ', array_slice($categories, 2))) }}">
-                                                        +{{ count($categories) - 2 }}
-                                                    </span>
-                                                @endif
-                                            </div>
-                                        @else
-                                            <span class="badge bg-secondary bg-opacity-25 text-secondary">Undefined</span>
-                                        @endif
                                     </td>
                                     <td>
                                         @if($collectionPoint->contact_phone)
@@ -485,6 +428,15 @@ form.d-inline { display: inline-flex; margin: 0; padding: 0; }
                                     </td>
                                     <td>
                                         <div class="action-buttons">
+                                            {{-- Bouton Voir / Détails --}}
+                                            <a href="{{ route('collectionpoints.show', $collectionPoint->id) }}"
+                                               class="action-btn action-view"
+                                               data-bs-toggle="tooltip"
+                                               aria-label="View collection point"
+                                               title="View Details">
+                                                <i class="bi bi-eye-fill" aria-hidden="true"></i>
+                                            </a>
+
                                             {{-- Bouton Modifier --}}
                                             <a href="{{ route('collectionpoints.edit', $collectionPoint->id) }}"
                                                class="action-btn action-edit"
@@ -550,11 +502,6 @@ form.d-inline { display: inline-flex; margin: 0; padding: 0; }
                             <div class="text-danger small mt-1">{{ $message }}</div>
                         @enderror
                     </div>
-                    <p class="text-muted small mb-0">
-                        The first line may contain headers (name, address, city, postal_code, latitude,
-                        longitude, contact_phone, status, opening_hours, accepted_categories).
-                        Use the CSV export as a template. Separator <code>;</code> or <code>,</code> is detected automatically.
-                    </p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>

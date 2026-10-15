@@ -11,6 +11,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rule;
 
 class OrderController extends Controller
@@ -208,6 +209,10 @@ class OrderController extends Controller
         ]));
 
         $product->decrementStock($validated['quantity']);
+
+        // Invalider le cache des recommandations après une nouvelle commande
+        $recommendationService = new RecommendationService();
+        $recommendationService->invalidateCache();
 
         return redirect()->route($this->getIndexRoute())
             ->with('success', 'Order created successfully!');

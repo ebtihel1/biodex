@@ -5,7 +5,7 @@
 <div class="container py-4 py-lg-5 order-form-page">
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ $indexRoute }}">My orders</a></li>
+            <li class="breadcrumb-item"><a href="{{ route('front.orders.index') }}">My orders</a></li>
             <li class="breadcrumb-item active" aria-current="page">New order</li>
         </ol>
     </nav>
@@ -39,7 +39,8 @@
                         </div>
                     @endif
 
-                    <form action="{{ $storeRoute }}" method="POST" class="needs-validation" novalidate>
+                    {{-- ✅ FIXED: use route() helper, not $storeRoute --}}
+                    <form action="{{ route('front.orders.store') }}" method="POST" class="needs-validation" novalidate>
                         @csrf
                         <input type="hidden" name="user_id" value="{{ auth()->id() }}">
 
@@ -137,7 +138,8 @@
                         </div>
 
                         <div class="form-actions">
-                            <a href="{{ $indexRoute }}" class="btn btn-brand-outline">
+                            {{-- ✅ FIXED: use route() helper, not $indexRoute --}}
+                            <a href="{{ route('front.orders.index') }}" class="btn btn-brand-outline">
                                 <i class="fas fa-arrow-left me-1"></i>Cancel
                             </a>
                             <button type="submit" class="btn btn-brand">

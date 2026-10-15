@@ -55,12 +55,44 @@
         font-weight: 500;
         margin-bottom: 4px;
     }
-    .sidebar .nav-link:hover,
-    .sidebar .nav-link.active {
+    .sidebar .nav-link:hover {
         background: linear-gradient(90deg, rgba(33, 162, 110, 0.22), rgba(255,255,255,0.08));
         transform: translateX(2px);
         box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
         color: #ffffff;
+    }
+
+    /* ===== Lien actif — couleur lumineuse ===== */
+    .sidebar .nav-link.active,
+    .sidebar .nav-item.show > .nav-link {
+        background: linear-gradient(90deg, rgba(43, 191, 141, 0.45), rgba(43, 191, 141, 0.15));
+        color: #ffffff !important;
+        font-weight: 600;
+        box-shadow:
+            inset 0 0 0 1px rgba(43, 191, 141, 0.5),
+            0 0 12px rgba(43, 191, 141, 0.35);
+        transform: translateX(3px);
+    }
+
+    /* Barre lumineuse à gauche du lien actif */
+    .sidebar .nav-link.active::before,
+    .sidebar .nav-item.show > .nav-link::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 10%;
+        bottom: 10%;
+        width: 3px;
+        border-radius: 3px;
+        background: linear-gradient(180deg, #2abf8d, #1fa26a);
+        box-shadow: 0 0 10px rgba(43, 191, 141, 0.8);
+    }
+
+    /* Icône lumineuse pour le lien actif */
+    .sidebar .nav-link.active > i,
+    .sidebar .nav-item.show > .nav-link > i {
+        color: #4ff0b7 !important;
+        filter: drop-shadow(0 0 6px rgba(79, 240, 183, 0.7));
     }
 
     .sidebar .nav-text {
@@ -92,6 +124,14 @@
     }
     .sidebar .submenu .nav-link:hover {
         background-color: rgba(255,255,255,0.05);
+    }
+
+    /* Sous-liens actifs */
+    .sidebar .submenu .nav-link.active {
+        background: rgba(43, 191, 141, 0.2);
+        color: #4ff0b7 !important;
+        font-weight: 600;
+        box-shadow: inset 0 0 0 1px rgba(43, 191, 141, 0.3);
     }
 
     .sidebar.collapsed .nav-link::after {
@@ -126,12 +166,44 @@
         align-items: center;
         justify-content: center;
         box-shadow: 0 8px 18px rgba(25, 133, 94, 0.25);
+        flex-shrink: 0;
     }
     .sidebar .toggle-btn:hover {
         background: linear-gradient(135deg, #37ce9e, #236f56);
     }
     .sidebar.collapsed .toggle-btn {
         transform: rotate(180deg);
+    }
+
+    /* ===== Logo de la sidebar ===== */
+    .sidebar-brand {
+        overflow: hidden;
+        transition: opacity 0.25s ease, width 0.3s ease, margin 0.3s ease;
+        display: flex;
+        align-items: center;
+    }
+
+    .sidebar-logo {
+        height: 36px;
+        width: auto;
+        max-width: 120px;
+        object-fit: contain;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.08);
+        padding: 4px;
+        transition: opacity 0.25s ease, transform 0.3s ease;
+    }
+
+    .sidebar.collapsed .sidebar-brand {
+        opacity: 0;
+        width: 0;
+        margin: 0;
+        pointer-events: none;
+    }
+
+    .sidebar.collapsed .sidebar-logo {
+        opacity: 0;
+        transform: translateX(-10px);
     }
 
     /* Main content */
@@ -165,15 +237,6 @@
         color: var(--biodex-text);
         font-weight: 700;
         letter-spacing: -0.02em;
-    }
-
-    .header-search {
-        width: 220px;
-        border: 1px solid rgba(18, 63, 55, 0.1);
-        background: #f4faf7;
-        border-radius: 12px;
-        padding: 0.6rem 0.9rem;
-        color: var(--biodex-text);
     }
 
     .header-profile {
@@ -235,8 +298,11 @@
             gap: 12px;
             flex-wrap: wrap;
         }
-        .header-search {
-            width: 150px;
+        .sidebar-brand {
+            opacity: 0;
+            width: 0;
+            overflow: hidden;
+            pointer-events: none;
         }
     }
 </style>
@@ -246,42 +312,47 @@
         <!-- Sidebar -->
         <div class="sidebar p-3" id="sidebar">
             <div class="d-flex align-items-center justify-content-between mb-4 px-1">
-                <div class="d-flex align-items-center gap-2">
-                    <img src="{{ asset('images/biodex-logo.png') }}" alt="Biodex" style="height: 36px; width: auto; max-width: 120px; object-fit: contain; border-radius: 8px; background: rgba(255,255,255,0.08); padding: 4px;">
+                <div class="d-flex align-items-center gap-2 sidebar-brand">
+                    <img src="{{ asset('images/biodex-logo.png') }}" alt="Biodex" class="sidebar-logo">
                 </div>
                 <button class="btn btn-sm btn-light toggle-btn" id="toggleSidebar" aria-label="Toggle sidebar"><i class="bi bi-list"></i></button>
             </div>
 
             <ul class="nav flex-column" role="navigation">
+                {{-- Dashboard --}}
                 <li class="nav-item mb-2">
-                    <a href="{{ url('back/home') }}" class="nav-link" data-tooltip="Dashboard" aria-label="Dashboard"><i class="bi bi-speedometer2 me-2"></i> <span class="nav-text">Dashboard</span></a>
+                    <a href="{{ url('back/home') }}" class="nav-link {{ request()->is('back/home') ? 'active' : '' }}" data-tooltip="Dashboard" aria-label="Dashboard">
+                        <i class="bi bi-speedometer2 me-2"></i> <span class="nav-text">Dashboard</span>
+                    </a>
                 </li>
-                <li class="nav-item mb-2">
-                    <a href="#wasteSubmenu" class="nav-link" onclick="toggleSubmenu(event)" data-tooltip="Waste Management" aria-label="Waste Management"><i class="bi bi-trash3 me-2"></i> <span class="nav-text">Waste Management</span></a>
-                  <ul class="submenu list-unstyled" id="wasteSubmenu">
-    <li>
-        <a href="{{ route('wastes.index') }}" class="nav-link text-white" data-tooltip="All Waste">
-            <i class="bi bi-recycle me-2"></i> All Waste
-        </a>
-    </li>
-    <li>
-         <a href="{{ route('waste_categories.index') }}" class="nav-link text-white" data-tooltip="Waste Categories">
-            <i class="bi bi-tags me-2"></i> Waste Categories
-        </a>
-    </li>
-   
- 
-</ul>
-               
-</li>
- <!-- NEW: Collection Points -->
-                <li class="nav-item mb-2">
-                    <a href="#collectionSubmenu" class="nav-link" onclick="toggleSubmenu(event)" data-tooltip="Collection Points" aria-label="Collection Points">
+
+                {{-- Waste Management --}}
+                <li class="nav-item mb-2 {{ request()->routeIs('wastes.*') || request()->routeIs('waste_categories.*') ? 'show' : '' }}">
+                    <a href="#wasteSubmenu" class="nav-link {{ request()->routeIs('wastes.*') || request()->routeIs('waste_categories.*') ? 'active' : '' }}" onclick="toggleSubmenu(event)" data-tooltip="Waste Management" aria-label="Waste Management">
+                        <i class="bi bi-trash3 me-2"></i> <span class="nav-text">Waste Management</span>
+                    </a>
+                    <ul class="submenu list-unstyled" id="wasteSubmenu">
+                        <li>
+                            <a href="{{ route('wastes.index') }}" class="nav-link text-white {{ request()->routeIs('wastes.*') ? 'active' : '' }}" data-tooltip="All Waste">
+                                <i class="bi bi-recycle me-2"></i> All Waste
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('waste_categories.index') }}" class="nav-link text-white {{ request()->routeIs('waste_categories.*') ? 'active' : '' }}" data-tooltip="Waste Categories">
+                                <i class="bi bi-tags me-2"></i> Waste Categories
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                {{-- Collection Points --}}
+                <li class="nav-item mb-2 {{ request()->is('dashbored/collectionpoints') || request()->is('collectionpoints/*') ? 'show' : '' }}">
+                    <a href="#collectionSubmenu" class="nav-link {{ request()->is('dashbored/collectionpoints') || request()->is('collectionpoints/*') ? 'active' : '' }}" onclick="toggleSubmenu(event)" data-tooltip="Collection Points" aria-label="Collection Points">
                         <i class="bi bi-geo-alt me-2"></i> <span class="nav-text">Collection Points</span>
                     </a>
                     <ul class="submenu list-unstyled" id="collectionSubmenu">
                         <li>
-                            <a href="{{ url('/dashbored/collectionpoints') }}" class="nav-link {{ request()->is('collectionpoints/index') ? 'active' : '' }}">
+                            <a href="{{ url('/dashbored/collectionpoints') }}" class="nav-link {{ request()->is('dashbored/collectionpoints') ? 'active' : '' }}">
                                 <i class="bi bi-geo-alt me-2"></i> Collection Points
                             </a>
                         </li>
@@ -293,10 +364,9 @@
                     </ul>
                 </li>
 
-
-                <!-- NEW: Recycling & Products Section -->
-                <li class="nav-item mb-2">
-                    <a href="#recyclingSubmenu" class="nav-link" onclick="toggleSubmenu(event)" data-tooltip="Recycling & Products" aria-label="Recycling & Products">
+                {{-- Recycling & Products --}}
+                <li class="nav-item mb-2 {{ request()->routeIs('recyclingprocesses.*') || request()->routeIs('products.*') ? 'show' : '' }}">
+                    <a href="#recyclingSubmenu" class="nav-link {{ request()->routeIs('recyclingprocesses.*') || request()->routeIs('products.*') ? 'active' : '' }}" onclick="toggleSubmenu(event)" data-tooltip="Recycling & Products" aria-label="Recycling & Products">
                         <i class="bi bi-arrow-repeat me-2"></i> <span class="nav-text">Recycling & Products</span>
                     </a>
                     <ul class="submenu list-unstyled" id="recyclingSubmenu">
@@ -310,17 +380,12 @@
                                 <i class="bi bi-box-seam me-2"></i> Recycled Products
                             </a>
                         </li>
-                        <li>
-                            <a href="{{ route('ai.recycling.demo') }}" class="nav-link {{ request()->routeIs('ai.recycling.*') ? 'active' : '' }}">
-                                <i class="bi bi-robot me-2"></i> AI Recycling
-                            </a>
-                        </li>
                     </ul>
                 </li>
 
-                <!-- NEW: Transactions Section -->
-                <li class="nav-item mb-2">
-                    <a href="#transactionsSubmenu" class="nav-link" onclick="toggleSubmenu(event)" data-tooltip="Transactions" aria-label="Transactions">
+                {{-- Transactions --}}
+                <li class="nav-item mb-2 {{ request()->routeIs('back.donations.*') || request()->routeIs('back.orders.*') || request()->routeIs('back.reservations.*') ? 'show' : '' }}">
+                    <a href="#transactionsSubmenu" class="nav-link {{ request()->routeIs('back.donations.*') || request()->routeIs('back.orders.*') || request()->routeIs('back.reservations.*') ? 'active' : '' }}" onclick="toggleSubmenu(event)" data-tooltip="Transactions" aria-label="Transactions">
                         <i class="bi bi-credit-card me-2"></i> <span class="nav-text">Transactions</span>
                     </a>
                     <ul class="submenu list-unstyled" id="transactionsSubmenu">
@@ -342,9 +407,11 @@
                     </ul>
                 </li>
 
-               
+                {{-- Campaign Management --}}
                 <li class="nav-item mb-2">
-                    <a href="{{ route('back.campaigns') }}" class="nav-link" data-tooltip="Campaign Management" aria-label="Campaign Management"><i class="bi bi-megaphone me-2"></i> <span class="nav-text">Campaign Management</span></a>
+                    <a href="{{ route('back.campaigns') }}" class="nav-link {{ request()->routeIs('back.campaigns') || request()->is('back/home/campaigns*') ? 'active' : '' }}" data-tooltip="Campaign Management" aria-label="Campaign Management">
+                        <i class="bi bi-megaphone me-2"></i> <span class="nav-text">Campaign Management</span>
+                    </a>
                 </li>
             </ul>
         </div>
@@ -378,7 +445,6 @@
         toggleSidebarBtn.addEventListener('click', () => {
             sidebar.classList.toggle('collapsed');
             mainContent.classList.toggle('collapsed');
-            // Update aria-expanded for accessibility
             const isExpanded = !sidebar.classList.contains('collapsed');
             toggleSidebarBtn.setAttribute('aria-expanded', isExpanded);
         });
@@ -391,27 +457,23 @@
             const submenu = parent.querySelector('.submenu');
             const isOpen = parent.classList.contains('show');
 
-            // Close all other submenus
             document.querySelectorAll('.nav-item.show').forEach(item => {
                 if (item !== parent) item.classList.remove('show');
             });
 
-            // Toggle the submenu
             parent.classList.toggle('show');
 
-            // If sidebar is collapsed, temporarily expand it to show submenu
             if (isCollapsed && !isOpen) {
                 sidebar.classList.remove('collapsed');
                 mainContent.classList.remove('collapsed');
                 toggleSidebarBtn.setAttribute('aria-expanded', true);
             }
 
-            // Update aria-expanded for accessibility
             const link = parent.querySelector('.nav-link');
             link.setAttribute('aria-expanded', !isOpen);
         }
 
-        // Keyboard navigation for accessibility
+        // Keyboard navigation
         document.querySelectorAll('.sidebar .nav-link').forEach(link => {
             link.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' || e.key === ' ') {

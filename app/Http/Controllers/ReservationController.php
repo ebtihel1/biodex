@@ -193,6 +193,10 @@ class ReservationController extends Controller
             'status' => ReservationStatus::Pending,
         ]));
 
+        // Invalider le cache des recommandations après une nouvelle réservation
+        $recommendationService = new RecommendationService();
+        $recommendationService->invalidateCache();
+
         $indexRoute = $this->getIndexRoute();
         return redirect()->route($indexRoute)->with('success', 'Reservation created successfully!');
     }

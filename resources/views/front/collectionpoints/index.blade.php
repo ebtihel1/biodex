@@ -44,9 +44,7 @@
             <div class="result-meta">
                 <span><i class="fas fa-location-dot me-2"></i><strong>{{ $collectionPoints->total() }}</strong>
                     {{ Str::plural('collection point', $collectionPoints->total()) }} found</span>
-                <a href="#interactive-map-section" class="btn btn-brand-outline btn-sm">
-                    <i class="fas fa-map-marked-alt me-1"></i>View interactive map
-                </a>
+               
             </div>
 
             <div class="row g-3 g-lg-4">
@@ -119,40 +117,7 @@
                 </div>
             @endif
 
-            {{-- ============ CARTE INTERACTIVE AI ============ --}}
-            <div id="interactive-map-section" class="mt-5">
-                <div class="result-meta">
-                    <span>
-                        <i class="fas fa-map-marked-alt me-2"></i>
-                        Interactive Map — Predicted Fill Level for Tomorrow
-                    </span>
-                    <button id="refreshMap" type="button" class="btn btn-brand-outline btn-sm">
-                        <i class="fas fa-rotate me-1"></i>Refresh
-                    </button>
-                </div>
-
-                <div class="map-card position-relative">
-                    <div class="map-toolbar">
-                        <div class="map-stats" id="mapStats">
-                            <span><i class="fas fa-location-dot me-1 text-success"></i><b id="totalCount">0</b> points</span>
-                            <span class="stat"><i class="stat-dot me-1" style="background:#198754"></i><b id="lowCount">0</b> faible</span>
-                            <span class="stat"><i class="stat-dot me-1" style="background:#f59f00"></i><b id="moderateCount">0</b> moyen</span>
-                            <span class="stat"><i class="stat-dot me-1" style="background:#dc3545"></i><b id="highCount">0</b> élevé</span>
-                            <span class="stat"><i class="stat-dot me-1" style="background:#adb5bd"></i><b id="insufficientCount">0</b> données insuffisantes</span>
-                        </div>
-                    </div>
-
-                    <div id="collectionMap"></div>
-
-                    <div class="map-legend">
-                        <h6>Niveau de remplissage prédit</h6>
-                        <div class="legend-row"><i class="legend-dot" style="background:#198754"></i>Faible (&lt; 50%)</div>
-                        <div class="legend-row"><i class="legend-dot" style="background:#f59f00"></i>Moyen (50 – 79%)</div>
-                        <div class="legend-row"><i class="legend-dot" style="background:#dc3545"></i>Élevé (≥ 80%)</div>
-                        <div class="legend-row"><i class="legend-dot" style="background:#adb5bd"></i>Données insuffisantes</div>
-                    </div>
-                </div>
-            </div>
+            
         @endif
     </div>
 </div>

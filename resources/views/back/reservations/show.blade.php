@@ -6,7 +6,7 @@
         <div class="col-12 col-md-8">
             <div class="card shadow">
                 <div class="card-body p-3 p-md-4">
-                    <h1 class="h3 fw-bold mb-4 text-success text-center">Reservation #{{ $reservation->id }}</h1>
+                    <h1 class="h3 fw-bold mb-4 text-success text-center">Reservation {{ $reservation->id }}</h1>
                     @if (session('success'))
                         <div class="alert alert-success mb-4" role="alert">
                             {{ session('success') }}

@@ -125,6 +125,8 @@
 .action-btn:hover i { transform: scale(1.1); }
 .action-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 
+.action-view   { background: linear-gradient(135deg,#0dcaf0,#0aa2c0); }
+.action-view:hover { background: linear-gradient(135deg,#0aa2c0,#087990); }
 .action-edit   { background: linear-gradient(135deg,#ffc107,#e0a800); }
 .action-edit:hover { background: linear-gradient(135deg,#e0a800,#c69500); }
 .action-delete { background: linear-gradient(135deg,#dc3545,#c82333); }
@@ -320,6 +322,11 @@ $(document).ready(function () {
                 orderable: false,
                 render: data => `
                     <div class="action-buttons">
+                        <a href="{{ url('campaigns') }}/${data.id}/view"
+                           class="action-btn action-view"
+                           title="View Details">
+                            <i class="bi bi-eye-fill"></i>
+                        </a>
                         <button class="action-btn action-edit edit-btn" data-id="${data.id}" title="Edit">
                             <i class="bi bi-pencil-square"></i>
                         </button>
@@ -354,19 +361,39 @@ $(document).ready(function () {
             }).fail(xhr => alert('Creation Error: ' + xhr.responseText));
     });
 
+    // === Edit — remplissage du modal ===
+    function fillEditModal(campaign) {
+        $('#editCampaignId').val(campaign.id);
+        $('#editTitle').val(campaign.title);
+        $('#editDescription').val(campaign.description);
+        $('#editStartDate').val(campaign.start_date);
+        $('#editEndDate').val(campaign.end_date);
+        $('#editStatus').val(campaign.status);
+        $('#editCity').val(campaign.city);
+        $('#editRegion').val(campaign.region);
+        $('#editDeadline').val(campaign.deadline_registration);
+        $('#editCampaignModal').modal('show');
+    }
+
     // === Edit — open modal ===
     $(document).on('click', '.edit-btn', function () {
         let id = $(this).data('id');
-        $.get(`{{ url("campaigns") }}/${id}`, function(campaign) {
-            $('#editCampaignId').val(campaign.id);
-            $('#editTitle').val(campaign.title);
-            $('#editDescription').val(campaign.description);
-            $('#editStartDate').val(campaign.start_date);
-            $('#editEndDate').val(campaign.end_date);
-            $('#editStatus').val(campaign.status);
-            $('#editCampaignModal').modal('show');
-        }).fail(xhr => alert('Error retrieving campaign: ' + xhr.responseText));
+        $.get(`{{ url("campaigns") }}/${id}`, fillEditModal)
+            .fail(xhr => alert('Error retrieving campaign: ' + xhr.responseText));
     });
+
+    // === Ouverture auto des modals (depuis la page de détails) ===
+    const queryParams = new URLSearchParams(window.location.search);
+    if (queryParams.get('edit')) {
+        $.get(`{{ url("campaigns") }}/${queryParams.get('edit')}`, fillEditModal)
+            .fail(xhr => alert('Error retrieving campaign: ' + xhr.responseText));
+    }
+    if (queryParams.get('create') === '1') {
+        new bootstrap.Modal(document.getElementById('createCampaignModal')).show();
+    }
+    if (queryParams.toString()) {
+        window.history.replaceState({}, '', '{{ url("back/campaigns") }}');
+    }
 
     // === Edit — submit ===
     $('#editCampaignForm').on('submit', function(e) {

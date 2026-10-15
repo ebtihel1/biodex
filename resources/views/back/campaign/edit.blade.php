@@ -37,6 +37,23 @@
                         </div>
                     </div>
 
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="editCity" class="form-label">City</label>
+                            <input type="text" name="city" id="editCity" class="form-control" placeholder="Ex: Casablanca">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="editRegion" class="form-label">Region</label>
+                            <input type="text" name="region" id="editRegion" class="form-control" placeholder="Ex: Casablanca-Settat">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="editDeadline" class="form-label">Registration Deadline</label>
+                        <input type="date" name="deadline_registration" id="editDeadline" class="form-control">
+                    </div>
+
                     <div class="mb-3">
                         <label for="editStatus" class="form-label">Status</label>
                         <select name="status" id="editStatus" class="form-select">

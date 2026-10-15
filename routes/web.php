@@ -369,7 +369,11 @@ Route::get('/biodex/collectionpoints/{id}', [CollectionPointFrontController::cla
 Route::get('/back/campaigns', function () {
     return view('back.campaign.campaigns');
 })->name('back.campaigns');
-
+// GET /campaigns/{id} reste l'endpoint JSON (resource show) consommé par DataTables.
+// La page HTML de détails est sur /campaigns/{id}/view pour ne pas écraser ce JSON.
+Route::get('/campaigns/{id}/view', [CampaignController::class, 'showView'])
+    ->name('campaign.show')
+    ->whereNumber('id');
 // Routes RESTful pour l'API des campagnes
 Route::get('/campaigns/export/csv', [CampaignController::class, 'exportCsv'])->name('campaigns.export.csv');
 Route::get('/campaigns/export/pdf', [CampaignController::class, 'exportPdf'])->name('campaigns.export.pdf');

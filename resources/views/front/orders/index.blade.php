@@ -146,7 +146,7 @@
                             </div>
                             <div>
                                 <dt>Total</dt>
-                                <dd class="is-price">${{ number_format($order->total_amount ?? 0, 2) }}</dd>
+                                <dd class="is-price">{{ number_format($order->total_amount ?? 0, 2) }} DT</dd>
                             </div>
                         </dl>
 

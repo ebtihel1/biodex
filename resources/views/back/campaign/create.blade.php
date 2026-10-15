@@ -34,6 +34,23 @@
                         </div>
                     </div>
 
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="createCity" class="form-label">City</label>
+                            <input type="text" name="city" id="createCity" class="form-control" placeholder="Ex: Casablanca">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="createRegion" class="form-label">Region</label>
+                            <input type="text" name="region" id="createRegion" class="form-control" placeholder="Ex: Casablanca-Settat">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="createDeadline" class="form-label">Registration Deadline</label>
+                        <input type="date" name="deadline_registration" id="createDeadline" class="form-control">
+                    </div>
+
                     <div class="mb-3">
                         <label for="createStatus" class="form-label">Status</label>
                         <select name="status" id="createStatus" class="form-select">

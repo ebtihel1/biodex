@@ -25,7 +25,7 @@
     <section class="page-hero">
         <div class="page-hero__text">
             <span class="page-hero__eyebrow"><i class="fas fa-receipt"></i> Order details</span>
-            <h1 class="page-hero__title">Order #{{ $order->id }}</h1>
+            <h1 class="page-hero__title">Order {{ $order->id }}</h1>
             <p class="page-hero__subtitle">
                 Placed on {{ $order->order_date?->format('M d, Y \a\t H:i') ?? '—' }}
             </p>
@@ -57,14 +57,14 @@
                     <div class="product-summary-text">
                         <h3>{{ $order->product->name ?? 'Product' }}</h3>
                         <p class="muted">Quantity: {{ $order->quantity }}</p>
-                        <p class="price">${{ number_format($order->total_amount ?? 0, 2) }}</p>
+                        <p class="price">dt{{ number_format($order->total_amount ?? 0, 2) }}</p>
                     </div>
                 </div>
 
                 <dl class="detail-list">
                     <div>
                         <dt><i class="fas fa-tag"></i> Unit price</dt>
-                        <dd>${{ number_format($order->product->price ?? 0, 2) }}</dd>
+                        <dd>dt{{ number_format($order->product->price ?? 0, 2) }}</dd>
                     </div>
                     <div>
                         <dt><i class="fas fa-hashtag"></i> Quantity</dt>
@@ -72,7 +72,7 @@
                     </div>
                     <div class="is-total">
                         <dt><i class="fas fa-dollar-sign"></i> Total amount</dt>
-                        <dd>${{ number_format($order->total_amount ?? 0, 2) }}</dd>
+                        <dd>dt{{ number_format($order->total_amount ?? 0, 2) }}</dd>
                     </div>
                 </dl>
             </div>

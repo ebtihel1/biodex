@@ -348,7 +348,8 @@
                                         <strong>{{ $category->name }}</strong>
                                     </td>
                                     <td>
-                                        <span class="text-truncate d-inline-block" style="max-width: 250px;"
+                                        <span class="d-inline-block text-wrap text-start"
+                                              style="max-width: 280px; white-space: normal; word-break: break-word;"
                                               title="{{ $category->description }}">
                                             {{ $category->description ?: '—' }}
                                         </span>

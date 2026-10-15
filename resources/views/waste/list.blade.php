@@ -384,7 +384,9 @@
                                     <td>{{ $waste->id }}</td>
                                     <td>
                                         <div class="fw-medium">{{ $waste->type }}</div>
-                                        <small class="text-muted d-block text-truncate" style="max-width: 180px;" title="{{ $waste->description }}">
+                                        <small class="text-muted d-block text-wrap"
+                                               style="max-width: 220px; white-space: normal; word-break: break-word;"
+                                               title="{{ $waste->description }}">
                                             {{ $waste->description ?: 'No description' }}
                                         </small>
                                     </td>

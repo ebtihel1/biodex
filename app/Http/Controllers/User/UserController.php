@@ -66,7 +66,14 @@ class UserController extends Controller
             'phone' => 'nullable|string|max:15',
             'address' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:100',
+            'avatar' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
+
+        if ($request->hasFile('avatar')) {
+            $validated['avatar'] = $request->file('avatar')->store('avatars', 'public');
+        } elseif ($request->boolean('remove_avatar')) {
+            $validated['avatar'] = null;
+        }
 
         if (isset($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);
@@ -75,7 +82,7 @@ class UserController extends Controller
         $user->update($validated);
 
         if (!$id) {
-            return redirect()->route('profile.view')->with('success', 'Profil mis à jour avec succès.');
+            return redirect()->route('profile.view')->with('success', 'Profile updated successfully.');
         }
 
         return response()->json(['message' => 'Utilisateur mis à jour', 'user' => $user]);
@@ -88,6 +95,15 @@ class UserController extends Controller
     {
         User::findOrFail($id)->delete();
         return response()->json(['message' => 'Utilisateur supprimé']);
+    }
+
+    /**
+     * Formulaire d'édition du profil (front-office)
+     */
+    public function editProfile()
+    {
+        $user = Auth::user();
+        return view('front.profil.edit', compact('user'));
     }
 
     /**

@@ -22,6 +22,7 @@ use App\Http\Controllers\Backoffice\CollectionPointController;
 use App\Http\Controllers\Front\CollectionPointFrontController;
 use App\Http\Controllers\Backoffice\RecyclingProcessController;
 use App\Http\Controllers\Backoffice\ProductController;
+use App\Http\Controllers\Backoffice\UserManagementController;
 use App\Http\Controllers\Front\ProductFrontController;
 use App\Http\Controllers\AI\CollectionAIController;
 use App\Http\Controllers\Campaign\CampaignController;
@@ -96,6 +97,10 @@ Route::middleware(['auth'])->group(function () {
         $user = Auth::user();
         return view('front.profil.profile', compact('user'));
     })->name('profile.view');
+
+    // Profile Edit
+    Route::get('/profile/edit', [UserController::class, 'editProfile'])->name('profile.edit');
+    Route::put('/profile', [UserController::class, 'update'])->name('profile.update');
 
     Route::get('/back/profile', function () {
         $user = Auth::user();
@@ -174,6 +179,19 @@ Route::post('products/import', [ProductController::class, 'importCsv'])
 Route::resource('products', ProductController::class);
 Route::post('products/{id}/toggle-availability', [ProductController::class, 'toggleAvailability'])
     ->name('products.toggle-availability');
+
+// ============================
+// User Management Routes (Back-office, admin only)
+// ============================
+Route::prefix('back/users')->name('back.users.')->middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/', [UserManagementController::class, 'index'])->name('index');
+    Route::get('/create', [UserManagementController::class, 'create'])->name('create');
+    Route::post('/', [UserManagementController::class, 'store'])->name('store');
+    Route::get('/{id}', [UserManagementController::class, 'show'])->name('show');
+    Route::get('/{id}/edit', [UserManagementController::class, 'edit'])->name('edit');
+    Route::put('/{id}', [UserManagementController::class, 'update'])->name('update');
+    Route::delete('/{id}', [UserManagementController::class, 'destroy'])->name('destroy');
+});
 
 // Dashboard Route
 Route::get('/back/home', [\App\Http\Controllers\Backoffice\DashboardController::class, 'index'])

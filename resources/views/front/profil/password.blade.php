@@ -1,6 +1,6 @@
 @extends('front.global')
 
-@section('title', 'Modifier le mot de passe')
+@section('title', 'Change Password')
 
 @section('content')
 <style>
@@ -278,8 +278,8 @@
         <div class="header-icon">
             <i class="bi bi-lock-fill"></i>
         </div>
-        <h2>Modifier le mot de passe</h2>
-        <p>Sécurisez votre compte avec un nouveau mot de passe</p>
+        <h2>Change Password</h2>
+        <p>Secure your account with a new password</p>
     </div>
     
     <div class="password-body">
@@ -299,12 +299,12 @@
         
         <div class="password-feedback success" id="successFeedback">
             <i class="bi bi-check-circle-fill me-2"></i>
-            <span class="feedback-message">Votre mot de passe a été modifié avec succès.</span>
+            <span class="feedback-message">Your password has been changed successfully.</span>
         </div>
         
         <div class="password-feedback error" id="errorFeedback">
             <i class="bi bi-exclamation-circle-fill me-2"></i>
-            <span class="feedback-message">Une erreur s'est produite. Veuillez vérifier vos informations.</span>
+            <span class="feedback-message">An error occurred. Please check your information.</span>
         </div>
         
         <form id="passwordForm" action="{{ route('settings.password.update') }}" method="POST">
@@ -314,10 +314,10 @@
             <div class="mb-4">
                 <label for="current_password" class="form-label">
                     <i class="bi bi-key-fill"></i>
-                    Mot de passe actuel
+                    Current password
                 </label>
                 <div class="input-group">
-                    <input type="password" class="form-control" name="current_password" id="current_password" required placeholder="Saisissez votre mot de passe actuel">
+                    <input type="password" class="form-control" name="current_password" id="current_password" required placeholder="Enter your current password">
                     <button type="button" class="password-toggle" data-target="current_password">
                         <i class="bi bi-eye"></i>
                     </button>
@@ -327,10 +327,10 @@
             <div class="mb-4">
                 <label for="new_password" class="form-label">
                     <i class="bi bi-lock-fill"></i>
-                    Nouveau mot de passe
+                    New password
                 </label>
                 <div class="input-group">
-                    <input type="password" class="form-control" name="new_password" id="new_password" required placeholder="Créez un nouveau mot de passe sécurisé">
+                    <input type="password" class="form-control" name="new_password" id="new_password" required placeholder="Create a new secure password">
                     <button type="button" class="password-toggle" data-target="new_password">
                         <i class="bi bi-eye"></i>
                     </button>
@@ -338,16 +338,16 @@
                 <div class="password-strength">
                     <div class="password-strength-bar" id="passwordStrengthBar"></div>
                 </div>
-                <small class="text-muted mt-2 d-block" id="passwordStrengthText">Force du mot de passe</small>
+                <small class="text-muted mt-2 d-block" id="passwordStrengthText">Password strength</small>
             </div>
 
             <div class="mb-4">
                 <label for="new_password_confirmation" class="form-label">
                     <i class="bi bi-lock-fill"></i>
-                    Confirmer le nouveau mot de passe
+                    Confirm new password
                 </label>
                 <div class="input-group">
-                    <input type="password" class="form-control" name="new_password_confirmation" id="new_password_confirmation" required placeholder="Confirmez votre nouveau mot de passe">
+                    <input type="password" class="form-control" name="new_password_confirmation" id="new_password_confirmation" required placeholder="Confirm your new password">
                     <button type="button" class="password-toggle" data-target="new_password_confirmation">
                         <i class="bi bi-eye"></i>
                     </button>
@@ -356,32 +356,32 @@
             </div>
             
             <div class="password-requirements">
-                <h6><i class="bi bi-list-check"></i>Votre mot de passe doit contenir :</h6>
+                <h6><i class="bi bi-list-check"></i>Your password must contain:</h6>
                 <div class="requirement invalid" id="reqLength">
                     <i class="bi bi-circle"></i>
-                    <span>Au moins 8 caractères</span>
+                    <span>At least 8 characters</span>
                 </div>
                 <div class="requirement invalid" id="reqUppercase">
                     <i class="bi bi-circle"></i>
-                    <span>Une lettre majuscule</span>
+                    <span>An uppercase letter</span>
                 </div>
                 <div class="requirement invalid" id="reqLowercase">
                     <i class="bi bi-circle"></i>
-                    <span>Une lettre minuscule</span>
+                    <span>A lowercase letter</span>
                 </div>
                 <div class="requirement invalid" id="reqNumber">
                     <i class="bi bi-circle"></i>
-                    <span>Un chiffre</span>
+                    <span>A number</span>
                 </div>
                 <div class="requirement invalid" id="reqSpecial">
                     <i class="bi bi-circle"></i>
-                    <span>Un caractère spécial</span>
+                    <span>A special character</span>
                 </div>
             </div>
 
             <div class="d-grid gap-2 mt-4">
                 <button type="submit" class="btn btn-update">
-                    <i class="bi bi-save me-2"></i>Enregistrer le nouveau mot de passe
+                    <i class="bi bi-save me-2"></i>Save new password
                 </button>
             </div>
         </form>
@@ -446,25 +446,25 @@
             if (/[^A-Za-z0-9]/.test(password)) strength += 20;
 
             if (strength === 0) {
-                feedback = 'Très faible';
+                feedback = 'Very weak';
                 color = '#dc3545';
             } else if (strength <= 40) {
-                feedback = 'Faible';
+                feedback = 'Weak';
                 color = '#ef476f';
             } else if (strength <= 70) {
-                feedback = 'Moyen';
+                feedback = 'Fair';
                 color = '#ffc107';
             } else if (strength <= 90) {
-                feedback = 'Fort';
+                feedback = 'Strong';
                 color = '#198754';
             } else {
-                feedback = 'Très fort';
+                feedback = 'Very strong';
                 color = '#0d6e3f';
             }
 
             strengthBar.style.width = strength + '%';
             strengthBar.style.backgroundColor = color;
-            strengthText.textContent = 'Force du mot de passe: ' + feedback;
+            strengthText.textContent = 'Password strength: ' + feedback;
             strengthText.style.color = color;
         }
 
@@ -479,12 +479,12 @@
             }
 
             if (password === confirmPassword) {
-                matchIndicator.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Les mots de passe correspondent';
+                matchIndicator.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Passwords match';
                 matchIndicator.className = 'match-indicator text-success';
                 confirmPasswordInput.classList.remove('is-invalid');
                 confirmPasswordInput.classList.add('is-valid');
             } else {
-                matchIndicator.innerHTML = '<i class="bi bi-x-circle-fill me-1"></i> Les mots de passe ne correspondent pas';
+                matchIndicator.innerHTML = '<i class="bi bi-x-circle-fill me-1"></i> Passwords do not match';
                 matchIndicator.className = 'match-indicator text-danger';
                 confirmPasswordInput.classList.remove('is-valid');
                 confirmPasswordInput.classList.add('is-invalid');
@@ -530,10 +530,10 @@
             let errorMessage = '';
             
             if (password !== confirmPassword) {
-                errorMessage = 'Les mots de passe ne correspondent pas.';
+                errorMessage = 'Passwords do not match.';
                 hasErrors = true;
             } else if (password.length < 8) {
-                errorMessage = 'Le mot de passe doit contenir au moins 8 caractères.';
+                errorMessage = 'Password must be at least 8 characters long.';
                 hasErrors = true;
             }
 
@@ -552,7 +552,7 @@
             const originalText = submitButton.innerHTML;
 
             // Show loading state
-            submitButton.innerHTML = '<i class="bi bi-arrow-repeat me-2"></i>Modification en cours...';
+            submitButton.innerHTML = '<i class="bi bi-arrow-repeat me-2"></i>Updating...';
             submitButton.disabled = true;
 
             try {
@@ -573,7 +573,7 @@
                     errorFeedback.style.display = 'none';
                     form.reset();
                     strengthBar.style.width = '0%';
-                    strengthText.textContent = 'Force du mot de passe';
+                    strengthText.textContent = 'Password strength';
                     strengthText.style.color = '#6c757d';
                     matchIndicator.innerHTML = '';
                     checkPasswordRequirements('');
@@ -588,12 +588,12 @@
                         successFeedback.style.display = 'none';
                     }, 5000);
                 } else {
-                    errorFeedback.querySelector('.feedback-message').textContent = result.message || 'Une erreur s\'est produite.';
+                    errorFeedback.querySelector('.feedback-message').textContent = result.message || 'An error occurred.';
                     errorFeedback.style.display = 'flex';
                     successFeedback.style.display = 'none';
                 }
             } catch (error) {
-                errorFeedback.querySelector('.feedback-message').textContent = 'Une erreur technique s\'est produite. Veuillez réessayer.';
+                errorFeedback.querySelector('.feedback-message').textContent = 'A technical error occurred. Please try again.';
                 errorFeedback.style.display = 'flex';
                 successFeedback.style.display = 'none';
             } finally {

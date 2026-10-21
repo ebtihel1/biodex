@@ -413,6 +413,15 @@
                         <i class="bi bi-megaphone me-2"></i> <span class="nav-text">Campaign Management</span>
                     </a>
                 </li>
+
+                @if (auth()->check() && optional(auth()->user()->role)->name === 'admin')
+                    {{-- User Management --}}
+                    <li class="nav-item mb-2">
+                        <a href="{{ route('back.users.index') }}" class="nav-link {{ request()->routeIs('back.users.*') ? 'active' : '' }}" data-tooltip="User Management" aria-label="User Management">
+                            <i class="bi bi-people me-2"></i> <span class="nav-text">User Management</span>
+                        </a>
+                    </li>
+                @endif
             </ul>
         </div>
 

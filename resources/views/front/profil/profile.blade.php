@@ -1,6 +1,6 @@
 @extends('front.global')
 
-@section('title', 'Mon Profil')
+@section('title', 'My Profile')
 
 @section('content')
 <style>
@@ -76,12 +76,19 @@
         height: 92px;
         place-items: center;
         margin-bottom: 24px;
+        overflow: hidden;
         border: 1px solid rgba(255, 255, 255, 0.62);
         border-radius: 50%;
         background: #f2d5a0;
         color: #674329;
         font-size: 2rem;
         font-weight: 700;
+    }
+
+    .profile-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
     }
 
     .profile-role {
@@ -182,6 +189,7 @@
     }
 
     .profile-settings-link,
+    .profile-edit-link,
     .profile-logout-button {
         display: inline-flex;
         min-height: 42px;
@@ -199,10 +207,36 @@
         transition: background-color 160ms ease, border-color 160ms ease;
     }
 
-    .profile-settings-link:hover {
+    .profile-settings-link:hover,
+    .profile-edit-link:hover {
         border-color: #b9d1c4;
         background: #f3f8f5;
         color: #104b39;
+    }
+
+    .profile-edit-link {
+        border-color: var(--profile-forest);
+        background: var(--profile-forest);
+        color: #fff;
+    }
+
+    .profile-edit-link:hover {
+        background: #104b39;
+        border-color: #104b39;
+        color: #fff;
+    }
+
+    .profile-flash {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        margin-bottom: 20px;
+        padding: 0.85rem 1.2rem;
+        border: 1px solid #198754;
+        border-radius: 8px;
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+        font-size: 0.92rem;
     }
 
     .profile-logout-button {
@@ -257,65 +291,88 @@
 </style>
 
 <div class="biodex-profile">
+    @if (session('success'))
+        <div class="profile-flash" role="status">
+            <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+            <span>{{ session('success') }}</span>
+        </div>
+    @endif
+
     <header class="profile-heading">
-        <p class="profile-eyebrow">Biodex / Espace personnel</p>
-        <h1>Mon profil</h1>
-        <p>Retrouvez les informations liées à votre compte.</p>
+        <p class="profile-eyebrow">Biodex / Personal space</p>
+        <h1>My Profile</h1>
+        <p>View and manage your account information.</p>
     </header>
 
-    <section class="profile-panel" aria-label="Informations du profil">
+    <section class="profile-panel" aria-label="Profile information">
         <div class="profile-identity">
-            <div class="profile-avatar" aria-hidden="true">{{ mb_substr($user->name, 0, 1) }}</div>
-            <span class="profile-role">{{ $user->role ? ucfirst($user->role->name) : 'Citoyen' }}</span>
+            <div class="profile-avatar" aria-hidden="true">
+                @if ($user->avatar)
+                    <img src="{{ asset('storage/' . $user->avatar) }}" alt="">
+                @else
+                    {{ mb_substr($user->name, 0, 1) }}
+                @endif
+            </div>
+            <span class="profile-role">{{ $user->role ? ucfirst($user->role->name) : 'Citizen' }}</span>
             <h2>{{ $user->name }}</h2>
             <p>{{ $user->email }}</p>
         </div>
 
         <div class="profile-details">
             <div class="profile-details-heading">
-                <h3>Informations du compte</h3>
-                <p>Vos coordonnées et la sécurité de votre compte.</p>
+                <h3>Account Information</h3>
+                <p>Your contact details and account security.</p>
             </div>
 
             <dl class="profile-detail-list">
                 <div class="profile-detail">
                     <span class="profile-detail-icon" aria-hidden="true"><i class="bi bi-envelope"></i></span>
                     <div>
-                        <dt>Adresse e-mail</dt>
+                        <dt>Email address</dt>
                         <dd>{{ $user->email }}</dd>
+                    </div>
+                </div>
+                <div class="profile-detail">
+                    <span class="profile-detail-icon" aria-hidden="true"><i class="bi bi-telephone"></i></span>
+                    <div>
+                        <dt>Phone</dt>
+                        <dd>{{ $user->phone ?: 'No phone number registered' }}</dd>
                     </div>
                 </div>
                 <div class="profile-detail">
                     <span class="profile-detail-icon" aria-hidden="true"><i class="bi bi-geo-alt"></i></span>
                     <div>
-                        <dt>Adresse</dt>
-                        <dd>{{ $user->address ?: 'Aucune adresse enregistrée' }}</dd>
+                        <dt>Address</dt>
+                        <dd>{{ $user->address ?: 'No address registered' }}{{ $user->city ? ', ' . $user->city : '' }}</dd>
                     </div>
                 </div>
                 <div class="profile-detail">
                     <span class="profile-detail-icon" aria-hidden="true"><i class="bi bi-calendar-check"></i></span>
                     <div>
-                        <dt>Membre depuis</dt>
+                        <dt>Member since</dt>
                         <dd>{{ $user->created_at->format('d/m/Y') }}</dd>
                     </div>
                 </div>
             </dl>
 
             <div class="profile-actions">
+                <a href="{{ route('profile.edit') }}" class="profile-edit-link">
+                    <i class="bi bi-pencil-square" aria-hidden="true"></i>
+                    Edit Profile
+                </a>
                 <a href="{{ route('settings.password') }}" class="profile-settings-link">
                     <i class="bi bi-shield-lock" aria-hidden="true"></i>
-                    Modifier le mot de passe
+                    Change Password
                 </a>
-        <form action="{{ route('logout') }}" method="POST" class="d-inline">
-            @csrf
+                <form action="{{ route('logout') }}" method="POST" class="d-inline">
+                    @csrf
                     <button type="submit" class="profile-logout-button">
                         <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
-                        Déconnexion
-            </button>
-        </form>
+                        Logout
+                    </button>
+                </form>
             </div>
         </div>
     </section>
-    </div>
 </div>
 @endsection

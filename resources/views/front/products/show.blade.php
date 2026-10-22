@@ -144,6 +144,9 @@
                                     <i class="bi bi-cart-plus me-2"></i> Add to Cart
                                 </button>
                             </form>
+                            <a href="{{ route('front.cart.index') }}" class="btn btn-outline-success btn-lg">
+                                <i class="bi bi-cart me-2"></i> View Cart
+                            </a>
                         @else
                             <button class="btn btn-secondary btn-lg" disabled>
                                 <i class="bi bi-x-circle me-2"></i> Product Unavailable

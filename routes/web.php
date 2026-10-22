@@ -3,6 +3,7 @@ use App\Http\Controllers\DonationController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\CartController;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
@@ -58,6 +59,13 @@ Route::prefix('biodex')->name('front.')->group(function () {
     Route::put('donations/{donation}', [DonationController::class, 'update'])->name('donations.update');
     Route::post('analyze-sentiment', [DonationController::class, 'analyzeSentiment'])->name('donations.analyze-sentiment');
 
+    // Cart (Frontoffice)
+    Route::get('cart', [CartController::class, 'index'])->name('cart.index');
+    Route::post('cart/add/{product}', [CartController::class, 'add'])->name('cart.add');
+    Route::put('cart/update/{cartItem}', [CartController::class, 'update'])->name('cart.update');
+    Route::delete('cart/remove/{cartItem}', [CartController::class, 'remove'])->name('cart.remove');
+    Route::post('cart/clear', [CartController::class, 'clear'])->name('cart.clear');
+
     // Orders (Frontoffice)
     Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('orders/create', [OrderController::class, 'create'])->name('orders.create');
@@ -72,6 +80,7 @@ Route::prefix('biodex')->name('front.')->group(function () {
     Route::get('orders/{order}/edit', [OrderController::class, 'edit'])->name('orders.edit');
     Route::put('orders/{order}', [OrderController::class, 'update'])->name('orders.update');
     Route::delete('orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy');
+    Route::post('orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
 
     // Reservations (Frontoffice)
     Route::get('reservations', [ReservationController::class, 'index'])->name('reservations.index');
@@ -84,6 +93,9 @@ Route::prefix('biodex')->name('front.')->group(function () {
     Route::get('reservations/{reservation}/edit', [ReservationController::class, 'edit'])->name('reservations.edit');
     Route::put('reservations/{reservation}', [ReservationController::class, 'update'])->name('reservations.update');
     Route::delete('reservations/{reservation}', [ReservationController::class, 'destroy'])->name('reservations.destroy');
+
+    // Campaigns (Frontoffice)
+    Route::get('campaigns', [CampaignController::class, 'frontIndex'])->name('campaigns.index');
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -106,6 +118,12 @@ Route::middleware(['auth'])->group(function () {
         $user = Auth::user();
         return view('back.profile', compact('user'));
     })->name('back.profile');
+
+    Route::get('/back/profile/edit', [UserController::class, 'editBackProfile'])->name('back.profile.edit');
+    Route::put('/back/profile', [UserController::class, 'update'])->name('back.profile.update');
+
+    Route::get('/back/profile/password', [UserController::class, 'editBackPassword'])->name('back.profile.password');
+    Route::put('/back/profile/password', [UserController::class, 'updatePassword'])->name('back.profile.password.update');
 
     // Notifications
     Route::get('/notifications/{notification}/read', [NotificationController::class, 'read'])->name('notifications.read');
@@ -318,7 +336,7 @@ Route::prefix('ai/recycling')->group(function () {
 // =============================================================
 Route::get('/shop/products', [ProductFrontController::class, 'index'])->name('front.products.index');
 Route::get('/shop/products/{id}', [ProductFrontController::class, 'show'])->name('front.products.show');
-Route::post('/shop/products/{product}/add-to-cart', [ProductFrontController::class, 'addToCart'])
+Route::post('/shop/products/{product}/add-to-cart', [CartController::class, 'add'])
     ->name('front.products.add-to-cart')
     ->middleware('auth');
 

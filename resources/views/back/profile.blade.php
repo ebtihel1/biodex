@@ -98,6 +98,13 @@
         </div>
 
         <div class="profile-content">
+            @if (session('success'))
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    {{ session('success') }}
+                </div>
+            @endif
+
             <div class="row g-4">
                 <div class="col-md-6">
                     <div class="info-block">
@@ -132,8 +139,15 @@
             </div>
 
             <div class="action-row">
-                <a href="{{ url('/profile') }}" class="btn btn-success btn-action">View public profile</a>
-                <a href="{{ route('settings.password') }}" class="btn btn-outline-success btn-action">Change password</a>
+                <a href="{{ route('back.profile.edit') }}" class="btn btn-success btn-action">
+                    <i class="bi bi-pencil-square me-1"></i> Edit profile
+                </a>
+                <a href="{{ route('back.profile.password') }}" class="btn btn-outline-success btn-action">
+                    <i class="bi bi-key me-1"></i> Change password
+                </a>
+                <a href="{{ url('/profile') }}" class="btn btn-outline-secondary btn-action">
+                    <i class="bi bi-box-arrow-up-right me-1"></i> View public profile
+                </a>
             </div>
         </div>
     </div>

@@ -6,12 +6,13 @@
     $statusKey = $order->status->value ?? $order->status;
     $statusMap = [
         'pending'   => ['label' => 'Pending',   'class' => 'is-pending'],
+        'confirmed' => ['label' => 'Confirmed', 'class' => 'is-confirmed'],
         'shipped'   => ['label' => 'Shipped',   'class' => 'is-shipped'],
         'delivered' => ['label' => 'Delivered', 'class' => 'is-delivered'],
         'cancelled' => ['label' => 'Cancelled', 'class' => 'is-cancelled'],
     ];
     $status = $statusMap[$statusKey] ?? ['label' => ucfirst($statusKey), 'class' => 'is-default'];
-    $hasImage = $order->product && $order->product->image_path;
+    $hasImage = $order->items->first() && $order->items->first()->product && $order->items->first()->product->image_path;
 @endphp
 
 <div class="container py-4 py-lg-5 order-show-page">
@@ -44,32 +45,26 @@
         <div class="col-12 col-lg-7">
             <div class="panel">
                 <div class="panel-head">
-                    <h2><i class="fas fa-box-open"></i> Product</h2>
+                    <h2><i class="fas fa-box-open"></i> Order Items</h2>
                 </div>
-                <div class="product-summary">
-                    <div class="product-thumb">
-                        @if($hasImage)
-                            <img src="{{ Storage::url($order->product->image_path) }}" alt="">
-                        @else
-                            <i class="fas fa-box-open"></i>
-                        @endif
+                @foreach($order->items as $item)
+                    <div class="product-summary">
+                        <div class="product-thumb">
+                            @if($item->product && $item->product->image_path)
+                                <img src="{{ Storage::url($item->product->image_path) }}" alt="">
+                            @else
+                                <i class="fas fa-box-open"></i>
+                            @endif
+                        </div>
+                        <div class="product-summary-text">
+                            <h3>{{ $item->product->name ?? 'Product' }}</h3>
+                            <p class="muted">Quantity: {{ $item->quantity }}</p>
+                            <p class="price">dt{{ number_format($item->subtotal, 2) }}</p>
+                        </div>
                     </div>
-                    <div class="product-summary-text">
-                        <h3>{{ $order->product->name ?? 'Product' }}</h3>
-                        <p class="muted">Quantity: {{ $order->quantity }}</p>
-                        <p class="price">dt{{ number_format($order->total_amount ?? 0, 2) }}</p>
-                    </div>
-                </div>
+                @endforeach
 
                 <dl class="detail-list">
-                    <div>
-                        <dt><i class="fas fa-tag"></i> Unit price</dt>
-                        <dd>dt{{ number_format($order->product->price ?? 0, 2) }}</dd>
-                    </div>
-                    <div>
-                        <dt><i class="fas fa-hashtag"></i> Quantity</dt>
-                        <dd>{{ $order->quantity }}</dd>
-                    </div>
                     <div class="is-total">
                         <dt><i class="fas fa-dollar-sign"></i> Total amount</dt>
                         <dd>dt{{ number_format($order->total_amount ?? 0, 2) }}</dd>
@@ -107,10 +102,13 @@
                 <a href="{{ route('front.orders.index') }}" class="btn btn-brand-outline">
                     <i class="fas fa-arrow-left me-1"></i>Back to orders
                 </a>
-                @if(isset($editRoute) && $statusKey === 'pending')
-                    <a href="{{ $editRoute }}" class="btn btn-brand">
-                        <i class="fas fa-pen me-1"></i>Edit order
-                    </a>
+                @if(($statusKey === 'pending' || $statusKey === 'confirmed'))
+                    <form action="{{ route('front.orders.cancel', $order) }}" method="POST" class="d-inline">
+                        @csrf
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-times me-1"></i>Cancel Order
+                        </button>
+                    </form>
                 @endif
             </div>
         </div>
@@ -184,6 +182,7 @@
         background: currentColor;
     }
     .status-pill.is-pending   { background: #fef3c7; color: #92400e; }
+    .status-pill.is-confirmed { background: #d1fae5; color: #065f46; }
     .status-pill.is-shipped   { background: #dbeafe; color: #1e40af; }
     .status-pill.is-delivered { background: #dcfce7; color: #166534; }
     .status-pill.is-cancelled { background: #fee2e2; color: #991b1b; }

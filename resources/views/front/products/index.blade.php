@@ -155,7 +155,7 @@
                             </div>
 
                             <!-- Boutons -->
-                            <a href="{{ route('front.products.show', $product->id) }}" 
+                            <a href="{{ route('front.products.show', $product->id) }}"
                                class="btn btn-outline-success w-100">
                                 <i class="bi bi-eye me-1"></i> View Details
                             </a>

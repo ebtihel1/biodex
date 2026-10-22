@@ -23,16 +23,10 @@
                             <p class="form-control">{{ $order->user->name ?? 'Unknown' }}</p>
                         </div>
 
-                        {{-- Product --}}
+                        {{-- Total Items --}}
                         <div class="col-12 col-md-6">
-                            <label class="form-label fw-bold">Product</label>
-                            <p class="form-control">{{ $order->product->name ?? 'N/A' }}</p>
-                        </div>
-
-                        {{-- Quantity --}}
-                        <div class="col-12 col-md-6">
-                            <label class="form-label fw-bold">Quantity</label>
-                            <p class="form-control">{{ $order->quantity }}</p>
+                            <label class="form-label fw-bold">Total Items</label>
+                            <p class="form-control">{{ $order->total_quantity }}</p>
                         </div>
 
                         {{-- Total --}}
@@ -74,6 +68,31 @@
                                 <p class="form-control">{{ $order->tracking_number }}</p>
                             </div>
                         @endif
+                    </div>
+
+                    {{-- Order Items --}}
+                    <div class="mt-4">
+                        <h5 class="fw-bold mb-3">Order Items</h5>
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Quantity</th>
+                                    <th>Unit Price</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($order->items as $item)
+                                    <tr>
+                                        <td>{{ $item->product->name ?? 'N/A' }}</td>
+                                        <td>{{ $item->quantity }}</td>
+                                        <td>{{ number_format($item->unit_price, 2) }} dt</td>
+                                        <td>{{ number_format($item->subtotal, 2) }} dt</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
 
                     {{-- Buttons --}}

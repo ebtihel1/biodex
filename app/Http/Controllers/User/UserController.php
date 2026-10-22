@@ -82,7 +82,9 @@ class UserController extends Controller
         $user->update($validated);
 
         if (!$id) {
-            return redirect()->route('profile.view')->with('success', 'Profile updated successfully.');
+            $redirectRoute = $request->routeIs('back.profile.update') ? 'back.profile' : 'profile.view';
+
+            return redirect()->route($redirectRoute)->with('success', 'Profile updated successfully.');
         }
 
         return response()->json(['message' => 'Utilisateur mis à jour', 'user' => $user]);
@@ -107,12 +109,30 @@ class UserController extends Controller
     }
 
     /**
+     * Formulaire d'édition du profil (back-office)
+     */
+    public function editBackProfile()
+    {
+        $user = Auth::user();
+        return view('back.profile-edit', compact('user'));
+    }
+
+    /**
      * Formulaire pour changer le mot de passe
      */
     public function editPassword()
     {
         $user = Auth::user();
         return view('front.profil.password', compact('user'));
+    }
+
+    /**
+     * Formulaire pour changer le mot de passe (back-office)
+     */
+    public function editBackPassword()
+    {
+        $user = Auth::user();
+        return view('back.profile-password', compact('user'));
     }
 
     /**

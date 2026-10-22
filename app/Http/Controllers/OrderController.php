@@ -4,14 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Enums\OrderStatus;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\User;
+use App\Models\Cart;
 use App\Services\RecommendationService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class OrderController extends Controller
@@ -148,43 +151,48 @@ class OrderController extends Controller
     // ======================= CREATE =======================
     public function create(Request $request)
     {
-        // Liste des produits disponibles
-        $products = Product::available()->get(['id', 'name', 'price']);
+        if ($this->isFrontRoute()) {
+            // For front, get user's cart
+            $cart = Cart::with('items.product')->where('user_id', Auth::id())->first();
 
-        // Produit pré-sélectionné (venant de la page détail produit)
-        $selectedProductId = $request->query('product_id');
-        $selectedProduct = $selectedProductId
-            ? Product::find($selectedProductId)
-            : null;
+            if (!$cart || $cart->items->isEmpty()) {
+                return redirect()->route('front.cart.index')
+                    ->with('error', 'Your cart is empty. Please add items before checkout.');
+            }
 
-        $viewPrefix = $this->getViewPrefix();
-        $storeRoute = $this->getStoreRoute();
-        $indexRoute = $this->getIndexRoute();
+            $viewPrefix = $this->getViewPrefix();
+            $storeRoute = $this->getStoreRoute();
+            $indexRoute = $this->getIndexRoute();
 
-        // Recommandations IA
-        $recommendations = [];
-        if (Auth::check()) {
-            $service = new RecommendationService();
-            $recommendations = $service->suggestForUser(Auth::user());
+            return view($viewPrefix . 'orders.create', compact(
+                'cart',
+                'storeRoute',
+                'indexRoute'
+            ));
+        } else {
+            // For back, show product selection (admin creating orders)
+            $products = Product::available()->get(['id', 'name', 'price']);
+            $users = User::all(['id', 'name']);
+
+            $viewPrefix = $this->getViewPrefix();
+            $storeRoute = $this->getStoreRoute();
+            $indexRoute = $this->getIndexRoute();
+
+            return view($viewPrefix . 'orders.create', compact(
+                'products',
+                'users',
+                'storeRoute',
+                'indexRoute'
+            ));
         }
-
-        return view($viewPrefix . 'orders.create', compact(
-            'products',
-            'storeRoute',
-            'indexRoute',
-            'recommendations',
-            'selectedProduct'
-        ));
     }
 
     // ======================= STORE =======================
     public function store(Request $request)
     {
         $rules = [
-            'product_id' => 'required|exists:products,id',
-            'quantity' => 'required|integer|min:1',
             'shipping_address' => 'required|string|max:255',
-            'payment_method' => 'required|string|in:cash,card,transfer',
+            'payment_method' => 'required|string|in:cash',
         ];
 
         if (!$this->isFrontRoute()) {
@@ -200,15 +208,49 @@ class OrderController extends Controller
             $validated['user_id'] = Auth::id();
         }
 
-        $product = Product::findOrFail($validated['product_id']);
-        $validated['total_amount'] = $validated['quantity'] * $product->price;
+        // Get user's cart
+        $cart = Cart::with('items.product')->where('user_id', $validated['user_id'])->first();
 
-        Order::create(array_merge($validated, [
-            'status' => OrderStatus::Pending,
-            'order_date' => now(),
-        ]));
+        if (!$cart || $cart->items->isEmpty()) {
+            return redirect()->back()->withErrors(['cart' => 'Your cart is empty.']);
+        }
 
-        $product->decrementStock($validated['quantity']);
+        // Validate stock for all items
+        foreach ($cart->items as $item) {
+            if ($item->quantity > $item->product->stock_quantity) {
+                return redirect()->back()->withErrors([
+                    'stock' => "Not enough stock for {$item->product->name}. Available: {$item->product->stock_quantity}, Requested: {$item->quantity}"
+                ]);
+            }
+        }
+
+        // Create order with items in a transaction
+        DB::transaction(function () use ($validated, $cart) {
+            $order = Order::create([
+                'user_id' => $validated['user_id'],
+                'total_amount' => $cart->total,
+                'status' => OrderStatus::Confirmed,
+                'order_date' => now(),
+                'shipping_address' => $validated['shipping_address'],
+                'payment_method' => $validated['payment_method'],
+                'tracking_number' => null,
+            ]);
+
+            // Create order items and decrement stock
+            foreach ($cart->items as $item) {
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $item->product_id,
+                    'quantity' => $item->quantity,
+                    'unit_price' => $item->unit_price,
+                ]);
+
+                $item->product->decrementStock($item->quantity);
+            }
+
+            // Clear the cart
+            $cart->items()->delete();
+        });
 
         // Invalider le cache des recommandations après une nouvelle commande
         $recommendationService = new RecommendationService();
@@ -221,7 +263,7 @@ class OrderController extends Controller
     // ======================= SHOW =======================
     public function show(Order $order)
     {
-        $order->load(['user', 'product']);
+        $order->load(['user', 'items.product']);
         $viewPrefix = $this->getViewPrefix();
         $indexRoute = $this->getIndexRoute();
         $editRoute = $this->getEditRoute($order);
@@ -232,23 +274,20 @@ class OrderController extends Controller
     // ======================= EDIT =======================
     public function edit(Order $order)
     {
-        $order->load(['user', 'product']);
-        $products = Product::available()->get(['id', 'name', 'price']);
+        $order->load(['user', 'items.product']);
         $viewPrefix = $this->getViewPrefix();
         $updateRoute = $this->getUpdateRoute($order);
         $showRoute = $this->getShowRoute($order);
         $indexRoute = $this->getIndexRoute();
-        return view($viewPrefix . 'orders.edit', compact('order', 'products', 'updateRoute', 'showRoute', 'indexRoute'));
+        return view($viewPrefix . 'orders.edit', compact('order', 'updateRoute', 'showRoute', 'indexRoute'));
     }
 
     // ======================= UPDATE =======================
     public function update(Request $request, Order $order)
     {
         $rules = [
-            'product_id' => 'required|exists:products,id',
-            'quantity' => 'required|integer|min:1',
             'shipping_address' => 'required|string|max:255',
-            'payment_method' => 'required|string|in:cash,card,transfer',
+            'payment_method' => 'required|string|in:cash',
             'tracking_number' => 'nullable|string|max:100',
         ];
 
@@ -262,15 +301,31 @@ class OrderController extends Controller
             $validated['status'] = $order->status;
         }
 
-        $product = Product::findOrFail($validated['product_id']);
-        $validated['total_amount'] = $validated['quantity'] * $product->price;
+        // Handle status change with stock management
+        if (isset($validated['status']) && $validated['status'] !== $order->status) {
+            $oldStatus = $order->status;
+            $newStatus = $validated['status'];
 
-        if ($validated['quantity'] != $order->quantity) {
-            $diff = $validated['quantity'] - $order->quantity;
-            if ($diff > 0) {
-                $product->decrementStock($diff);
-            } else {
-                $product->increment('stock_quantity', abs($diff));
+            // If changing to Cancelled and order was not already cancelled, restore stock
+            if ($newStatus === OrderStatus::Cancelled->value && $oldStatus !== OrderStatus::Cancelled->value) {
+                DB::transaction(function () use ($order) {
+                    foreach ($order->items as $item) {
+                        if ($item->product) {
+                            $item->product->increment('stock_quantity', $item->quantity);
+                        }
+                    }
+                });
+            }
+
+            // If changing from Cancelled to another status, decrement stock again
+            if ($oldStatus === OrderStatus::Cancelled->value && $newStatus !== OrderStatus::Cancelled->value) {
+                DB::transaction(function () use ($order) {
+                    foreach ($order->items as $item) {
+                        if ($item->product && $item->quantity <= $item->product->stock_quantity) {
+                            $item->product->decrementStock($item->quantity);
+                        }
+                    }
+                });
             }
         }
 
@@ -282,11 +337,44 @@ class OrderController extends Controller
     // ======================= DESTROY =======================
     public function destroy(Order $order)
     {
-        if ($order->product) {
-            $order->product->increment('stock_quantity', $order->quantity);
-        }
-        $order->delete();
+        DB::transaction(function () use ($order) {
+            // Restore stock for all items
+            foreach ($order->items as $item) {
+                if ($item->product) {
+                    $item->product->increment('stock_quantity', $item->quantity);
+                }
+            }
+            $order->delete();
+        });
+
         return redirect()->route($this->getIndexRoute())->with('success', 'Order deleted!');
+    }
+
+    // ======================= CANCEL (for customers) =======================
+    public function cancel(Order $order)
+    {
+        // Only allow cancellation for own orders and only if pending
+        if ($this->isFrontRoute()) {
+            if ($order->user_id !== Auth::id()) {
+                return redirect()->back()->with('error', 'Unauthorized action.');
+            }
+        }
+
+        if ($order->status !== OrderStatus::Pending->value && $order->status !== OrderStatus::Confirmed->value) {
+            return redirect()->back()->with('error', 'Only pending or confirmed orders can be cancelled.');
+        }
+
+        DB::transaction(function () use ($order) {
+            // Restore stock for all items
+            foreach ($order->items as $item) {
+                if ($item->product) {
+                    $item->product->increment('stock_quantity', $item->quantity);
+                }
+            }
+            $order->update(['status' => OrderStatus::Cancelled]);
+        });
+
+        return redirect()->route($this->getIndexRoute())->with('success', 'Order cancelled successfully!');
     }
 
     // ======================= EXPORT CSV =======================
@@ -419,7 +507,7 @@ class OrderController extends Controller
     // ======================= HELPERS =======================
     protected function filteredQuery(Request $request): Builder
     {
-        $query = Order::query()->with(['user', 'product']);
+        $query = Order::query()->with(['user', 'items.product']);
 
         if ($this->isFrontRoute()) {
             $query->where('user_id', Auth::id() ?? 0);
@@ -430,7 +518,7 @@ class OrderController extends Controller
                 $q->where('shipping_address', 'like', "%{$search}%")
                     ->orWhere('tracking_number', 'like', "%{$search}%")
                     ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$search}%"))
-                    ->orWhereHas('product', fn ($p) => $p->where('name', 'like', "%{$search}%"));
+                    ->orWhereHas('items.product', fn ($p) => $p->where('name', 'like', "%{$search}%"));
             });
         }
 
@@ -440,7 +528,7 @@ class OrderController extends Controller
 
         if ($request->filled('product_search')) {
             $ps = $request->query('product_search');
-            $query->whereHas('product', fn ($q) => $q->where('name', 'like', "%{$ps}%"));
+            $query->whereHas('items.product', fn ($q) => $q->where('name', 'like', "%{$ps}%"));
         }
 
         if ($request->filled('user')) {

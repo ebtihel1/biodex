@@ -311,8 +311,7 @@
                             <tr class="text-center">
                                 <th><a class="sort-link" href="{{ $sortLink('id') }}">ID {!! $sortIcon('id') !!}</a></th>
                                 <th><a class="sort-link" href="{{ $sortLink('user_id') }}">User {!! $sortIcon('user_id') !!}</a></th>
-                                <th><a class="sort-link" href="{{ $sortLink('product_id') }}">Product {!! $sortIcon('product_id') !!}</a></th>
-                                <th><a class="sort-link" href="{{ $sortLink('quantity') }}">Qty {!! $sortIcon('quantity') !!}</a></th>
+                                <th>Items</th>
                                 <th><a class="sort-link" href="{{ $sortLink('total_amount') }}">Total {!! $sortIcon('total_amount') !!}</a></th>
                                 <th><a class="sort-link" href="{{ $sortLink('status') }}">Status {!! $sortIcon('status') !!}</a></th>
                                 <th><a class="sort-link" href="{{ $sortLink('order_date') }}">Date {!! $sortIcon('order_date') !!}</a></th>
@@ -324,8 +323,15 @@
                                 <tr class="text-center">
                                     <td>{{ $order->id }}</td>
                                     <td>{{ $order->user->name ?? 'Unknown' }}</td>
-                                    <td>{{ $order->product->name ?? 'N/A' }}</td>
-                                    <td>{{ $order->quantity }}</td>
+                                    <td>
+                                        @php
+                                            $itemNames = $order->items->map(fn($item) => $item->product->name . ' x' . $item->quantity)->take(2)->implode(', ');
+                                            if ($order->items->count() > 2) {
+                                                $itemNames .= ' +' . ($order->items->count() - 2) . ' more';
+                                            }
+                                        @endphp
+                                        <small>{{ $itemNames ?: 'N/A' }}</small>
+                                    </td>
                                     <td class="fw-medium">{{ number_format((float) $order->total_amount, 2) }} DT</td>
                                     <td>
                                         @php

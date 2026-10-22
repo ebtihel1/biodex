@@ -24,42 +24,6 @@
                     <form action="{{ $updateRoute }}" method="POST">
                         @csrf
                         @method('PUT')
-                        <!-- User -->
-                        <div class="mb-3">
-                            <label for="user_id" class="form-label fw-bold">User</label>
-                            <select name="user_id" id="user_id" class="form-select" required>
-                                @foreach($users ?? \App\Models\User::all() as $user)
-                                    <option value="{{ $user->id }}" {{ old('user_id', $order->user_id) == $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
-                                @endforeach
-                            </select>
-                            @error('user_id')
-                                <small class="text-danger">{{ $message }}</small>
-                            @enderror
-                        </div>
-                        <!-- Product -->
-                        <div class="mb-3">
-                            <label for="product_id" class="form-label fw-bold">Product</label>
-                            <select name="product_id" id="product_id" class="form-select" required>
-                                @if(isset($products) && $products->count() > 0)
-                                    @foreach($products as $product)
-                                        <option value="{{ $product->id }}" {{ old('product_id', $order->product_id) == $product->id ? 'selected' : '' }}>{{ $product->name }} ({{ $product->price }})</option>
-                                    @endforeach
-                                @else
-                                    <option value="" disabled selected>No products available</option>
-                                @endif
-                            </select>
-                            @error('product_id')
-                                <small class="text-danger">{{ $message }}</small>
-                            @enderror
-                        </div>
-                        <!-- Quantity -->
-                        <div class="mb-3">
-                            <label for="quantity" class="form-label fw-bold">Quantity</label>
-                            <input type="number" min="1" name="quantity" id="quantity" value="{{ old('quantity', $order->quantity) }}" class="form-control" required>
-                            @error('quantity')
-                                <small class="text-danger">{{ $message }}</small>
-                            @enderror
-                        </div>
                         <!-- Shipping Address -->
                         <div class="mb-3">
                             <label for="shipping_address" class="form-label fw-bold">Shipping Address</label>
@@ -72,9 +36,7 @@
                         <div class="mb-3">
                             <label for="payment_method" class="form-label fw-bold">Payment Method</label>
                             <select name="payment_method" id="payment_method" class="form-select" required>
-                                <option value="cash" {{ old('payment_method', $order->payment_method) == 'cash' ? 'selected' : '' }}>Cash</option>
-                                <option value="card" {{ old('payment_method', $order->payment_method) == 'card' ? 'selected' : '' }}>Card</option>
-                                <option value="transfer" {{ old('payment_method', $order->payment_method) == 'transfer' ? 'selected' : '' }}>Transfer</option>
+                                <option value="cash" selected>Cash</option>
                             </select>
                             @error('payment_method')
                                 <small class="text-danger">{{ $message }}</small>

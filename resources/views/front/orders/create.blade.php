@@ -5,16 +5,16 @@
 <div class="container py-4 py-lg-5 order-form-page">
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ route('front.orders.index') }}">My orders</a></li>
-            <li class="breadcrumb-item active" aria-current="page">New order</li>
+            <li class="breadcrumb-item"><a href="{{ route('front.cart.index') }}">Cart</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Checkout</li>
         </ol>
     </nav>
 
     <section class="page-hero">
         <div class="page-hero__text">
-            <span class="page-hero__eyebrow"><i class="fas fa-cart-plus"></i> New purchase</span>
-            <h1 class="page-hero__title">Place a new order</h1>
-            <p class="page-hero__subtitle">Choose a product, set the quantity and confirm your delivery details.</p>
+            <span class="page-hero__eyebrow"><i class="fas fa-cart-plus"></i> Checkout</span>
+            <h1 class="page-hero__title">Complete Your Order</h1>
+            <p class="page-hero__subtitle">Review your items and provide delivery details.</p>
         </div>
     </section>
 
@@ -39,111 +39,62 @@
                         </div>
                     @endif
 
-                    {{-- ✅ FIXED: use route() helper, not $storeRoute --}}
                     <form action="{{ route('front.orders.store') }}" method="POST" class="needs-validation" novalidate>
                         @csrf
                         <input type="hidden" name="user_id" value="{{ auth()->id() }}">
 
-                        <div class="mb-3">
-                            <label for="product_id" class="form-label">
-                                <i class="fas fa-tag me-1"></i>Product
-                            </label>
-                            <select name="product_id" id="product_id" class="form-select" required>
-                                <option value="">Select a product</option>
-                                @if(isset($products) && $products->count() > 0)
-                                    @foreach($products as $product)
-                                        <option value="{{ $product->id }}" {{ old('product_id') == $product->id ? 'selected' : '' }}>{{ $product->name }} ({{ $product->price }})</option>
-                                    @endforeach
-                                @else
-                                    <option value="" disabled>No products available</option>
-                                @endif
-                            </select>
-                            @error('product_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        @php
-                            $rec_product = $recommendations[0] ?? null;
-                            $rec_id = null;
-                            if ($rec_product && isset($products)) {
-                                foreach($products as $product) {
-                                    if ($product->name === ($rec_product['name'] ?? $rec_product->name ?? '') && $product->price == ($rec_product['price'] ?? $rec_product->price ?? 0)) {
-                                        $rec_id = $product->id;
-                                        break;
-                                    }
-                                }
-                            }
-                        @endphp
-
-                        @if(isset($recommendations) && count($recommendations) > 0 && $rec_id)
-                            <div class="ai-suggestion" role="alert">
-                                <i class="fas fa-wand-magic-sparkles"></i>
-                                <div>
-                                    <strong>AI suggestion:</strong> based on your history, try
-                                    <strong>{{ $recommendations[0]['name'] ?? $recommendations[0]->name ?? 'a recommended product' }}</strong>
-                                    ({{ $recommendations[0]['price'] ?? $recommendations[0]->price ?? 0 }}).
+                        <!-- Cart Items Summary -->
+                        <div class="mb-4">
+                            <h5 class="mb-3"><i class="fas fa-shopping-basket me-2"></i>Order Items</h5>
+                            @foreach($cart->items as $item)
+                                <div class="cart-item-summary d-flex justify-content-between align-items-center py-2 border-bottom">
+                                    <div>
+                                        <strong>{{ $item->product->name }}</strong>
+                                        <div class="text-muted small">
+                                            {{ $item->quantity }} x {{ number_format($item->unit_price, 2) }} DT
+                                        </div>
+                                    </div>
+                                    <div class="fw-bold text-success">
+                                        {{ number_format($item->subtotal, 2) }} DT
+                                    </div>
                                 </div>
-                                <button type="button" class="btn btn-brand-outline btn-sm"
-                                        onclick="document.getElementById('product_id').value = {{ $rec_id }}; this.closest('.ai-suggestion').style.display='none';">
-                                    Select it
-                                </button>
-                            </div>
-                        @endif
-
-                        <div class="row g-3">
-                            <div class="col-12 col-sm-6">
-                                <label for="quantity" class="form-label">
-                                    <i class="fas fa-hashtag me-1"></i>Quantity
-                                </label>
-                                <input type="number" name="quantity" id="quantity" value="{{ old('quantity') }}" min="1" class="form-control" required>
-                                @error('quantity')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="col-12 col-sm-6">
-                                <label for="payment_method" class="form-label">
-                                    <i class="fas fa-credit-card me-1"></i>Payment method
-                                </label>
-                                <select name="payment_method" id="payment_method" class="form-select" required>
-                                    <option value="">Select a method</option>
-                                    <option value="cash" {{ old('payment_method') == 'cash' ? 'selected' : '' }}>Cash</option>
-                                    <option value="card" {{ old('payment_method') == 'card' ? 'selected' : '' }}>Card</option>
-                                    <option value="transfer" {{ old('payment_method') == 'transfer' ? 'selected' : '' }}>Transfer</option>
-                                </select>
-                                @error('payment_method')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
+                            @endforeach
+                            <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                                <strong>Total ({{ $cart->total_quantity }} items)</strong>
+                                <strong class="text-success fs-5">{{ number_format($cart->total, 2) }} DT</strong>
                             </div>
                         </div>
 
-                        <div class="mb-3 mt-3">
+                        <div class="mb-3">
                             <label for="shipping_address" class="form-label">
                                 <i class="fas fa-location-dot me-1"></i>Shipping address
                             </label>
-                            <input type="text" name="shipping_address" id="shipping_address" value="{{ old('shipping_address') }}" class="form-control" placeholder="Street, city, postal code" required>
+                            <input type="text" name="shipping_address" id="shipping_address"
+                                   value="{{ old('shipping_address', auth()->user()->address ?? '') }}"
+                                   class="form-control" placeholder="Street, city, postal code" required>
                             @error('shipping_address')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
-                        <div class="mb-4">
-                            <label for="tracking_number" class="form-label">
-                                <i class="fas fa-route me-1"></i>Tracking number <span class="text-muted">(optional)</span>
+                        <div class="mb-3">
+                            <label for="payment_method" class="form-label">
+                                <i class="fas fa-money-bill me-1"></i>Payment method
                             </label>
-                            <input type="text" name="tracking_number" id="tracking_number" value="{{ old('tracking_number') }}" class="form-control">
-                            @error('tracking_number')
+                            <select name="payment_method" id="payment_method" class="form-select" required>
+                                <option value="cash" selected>Cash on delivery</option>
+                            </select>
+                            @error('payment_method')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
                         <div class="form-actions">
-                            {{-- ✅ FIXED: use route() helper, not $indexRoute --}}
-                            <a href="{{ route('front.orders.index') }}" class="btn btn-brand-outline">
-                                <i class="fas fa-arrow-left me-1"></i>Cancel
+                            <a href="{{ route('front.cart.index') }}" class="btn btn-brand-outline">
+                                <i class="fas fa-arrow-left me-1"></i>Back to Cart
                             </a>
                             <button type="submit" class="btn btn-brand">
-                                <i class="fas fa-paper-plane me-1"></i>Place order
+                                <i class="fas fa-paper-plane me-1"></i>Place Order
                             </button>
                         </div>
                     </form>
@@ -237,21 +188,9 @@
         box-shadow: 0 0 0 .2rem rgba(16, 185, 129, .18);
     }
 
-    .ai-suggestion {
-        display: flex;
-        align-items: center;
-        gap: .85rem;
-        flex-wrap: wrap;
-        padding: 1rem 1.15rem;
-        margin-bottom: 1.25rem;
-        border-radius: 12px;
-        border: 1px solid #c7eeda;
-        background: var(--mint);
-        color: #10603f;
-        font-size: .9rem;
+    .cart-item-summary {
+        font-size: .95rem;
     }
-    .ai-suggestion > i { font-size: 1.1rem; }
-    .ai-suggestion > div { flex: 1 1 220px; }
 
     .form-actions {
         display: flex;

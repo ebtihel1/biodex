@@ -7,6 +7,7 @@
 
     $statusMap = [
         'pending'   => ['label' => 'Pending',   'class' => 'is-pending'],
+        'confirmed' => ['label' => 'Confirmed', 'class' => 'is-confirmed'],
         'shipped'   => ['label' => 'Shipped',   'class' => 'is-shipped'],
         'delivered' => ['label' => 'Delivered', 'class' => 'is-delivered'],
         'cancelled' => ['label' => 'Cancelled', 'class' => 'is-cancelled'],
@@ -114,14 +115,15 @@
             @php
                 $statusKey = $order->status->value ?? $order->status;
                 $status    = $statusMap[$statusKey] ?? ['label' => ucfirst($statusKey), 'class' => 'is-default'];
-                $hasImage  = $order->product && $order->product->image_path;
+                $firstItem = $order->items->first();
+                $hasImage  = $firstItem && $firstItem->product && $firstItem->product->image_path;
             @endphp
 
             <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
                 <article class="order-card">
                     <a href="{{ route('front.orders.show', $order) }}" class="order-media" tabindex="-1" aria-hidden="true">
                         @if($hasImage)
-                            <img src="{{ Storage::url($order->product->image_path) }}" alt="" loading="lazy">
+                            <img src="{{ Storage::url($firstItem->product->image_path) }}" alt="" loading="lazy">
                         @else
                             <i class="fas fa-box-open"></i>
                         @endif
@@ -135,14 +137,16 @@
                             </time>
                         </div>
 
-                        <h2 class="order-title" title="{{ $order->product->name ?? '' }}">
-                            {{ Str::limit($order->product->name ?? 'Product', 40) }}
+                        <h2 class="order-title" title="{{ $firstItem->product->name ?? '' }}">
+                            {{ $order->items->count() > 1
+                                ? $order->items->count() . ' items'
+                                : Str::limit($firstItem->product->name ?? 'Product', 40) }}
                         </h2>
 
                         <dl class="order-meta">
                             <div>
-                                <dt>Quantity</dt>
-                                <dd>{{ $order->quantity }}</dd>
+                                <dt>Items</dt>
+                                <dd>{{ $order->total_quantity }}</dd>
                             </div>
                             <div>
                                 <dt>Total</dt>
@@ -516,6 +520,7 @@
         background: currentColor;
     }
     .status-pill.is-pending   { background: #fef3c7; color: #92400e; }
+    .status-pill.is-confirmed { background: #d1fae5; color: #065f46; }
     .status-pill.is-shipped   { background: #dbeafe; color: #1e40af; }
     .status-pill.is-delivered { background: #dcfce7; color: #166534; }
     .status-pill.is-cancelled { background: #fee2e2; color: #991b1b; }

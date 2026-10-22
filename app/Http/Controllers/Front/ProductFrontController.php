@@ -75,7 +75,7 @@ class ProductFrontController extends Controller
     }
 
     /**
-     * Add the product to the cart, which immediately creates a pending order.
+     * Add the product to the cart.
      */
     public function addToCart(Product $product)
     {
@@ -88,22 +88,26 @@ class ProductFrontController extends Controller
             return redirect()->back()->with('error', 'This product is currently unavailable.');
         }
 
-        Order::create([
-            'user_id' => Auth::id(),
-            'product_id' => $product->id,
-            'quantity' => 1,
-            'total_amount' => $product->price,
-            'status' => OrderStatus::Pending->value,
-            'order_date' => now(),
-            'shipping_address' => Auth::user()->address ?? 'To be confirmed',
-            'payment_method' => 'cash',
-            'tracking_number' => null,
-        ]);
+        $cart = \App\Models\Cart::firstOrCreate(['user_id' => Auth::id()]);
 
-        $product->decrementStock(1);
+        $cartItem = $cart->items()->where('product_id', $product->id)->first();
+
+        if ($cartItem) {
+            $newQuantity = $cartItem->quantity + 1;
+            if ($newQuantity > $product->stock_quantity) {
+                return redirect()->back()->with('error', 'Not enough stock available.');
+            }
+            $cartItem->update(['quantity' => $newQuantity]);
+        } else {
+            $cart->items()->create([
+                'product_id' => $product->id,
+                'quantity' => 1,
+                'unit_price' => $product->price,
+            ]);
+        }
 
         return redirect()->back()
-            ->with('success', $product->name . ' has been added to your orders.');
+            ->with('success', $product->name . ' has been added to your cart.');
     }
 }
 

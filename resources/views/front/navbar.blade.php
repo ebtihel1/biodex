@@ -28,7 +28,7 @@
              
 
                 <li class="nav-item">
-                    <a href="{{ url('/campaignsFront') }}" class="nav-link {{ request()->is('campaigns*') ? 'active' : '' }}">
+                    <a href="{{ route('front.campaigns.index') }}" class="nav-link {{ request()->routeIs('front.campaigns.*') ? 'active' : '' }}">
                         <i class="bi bi-megaphone me-1"></i>Campaigns
                     </a>
                 </li>
@@ -48,9 +48,17 @@
 
                 <li class="nav-item">
                     <a href="{{ route('front.orders.index') }}" class="nav-link {{ request()->routeIs('front.orders.*') ? 'active' : '' }}">
-                        <i class="bi bi-cart me-1"></i>Orders
+                        <i class="bi bi-receipt me-1"></i>Orders
                     </a>
                 </li>
+
+                @auth
+                <li class="nav-item">
+                    <a href="{{ route('front.cart.index') }}" class="nav-link {{ request()->routeIs('front.cart.*') ? 'active' : '' }}">
+                        <i class="bi bi-cart3 me-1"></i>Cart
+                    </a>
+                </li>
+                @endauth
 
                 <li class="nav-item">
                     <a href="{{ route('front.reservations.index') }}" class="nav-link {{ request()->routeIs('front.reservations.*') ? 'active' : '' }}">
@@ -67,7 +75,7 @@
                 </li>
 
                @auth
-    @include('partials.notifications', ['tag' => 'li', 'tagClass' => 'nav-item dropdown', 'btnClass' => 'nav-link'])
+    @include('partials.notifications', ['tag' => 'li', 'tagClass' => 'nav-item dropdown', 'btnClass' => 'nav-link', 'context' => 'front'])
     <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle text-light" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
             <i class="bi bi-person-circle me-1"></i> {{ Auth::user()->name }}

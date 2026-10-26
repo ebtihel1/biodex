@@ -301,35 +301,55 @@ class OrderController extends Controller
             $validated['status'] = $order->status;
         }
 
-        // Handle status change with stock management
-        if (isset($validated['status']) && $validated['status'] !== $order->status) {
-            $oldStatus = $order->status;
-            $newStatus = $validated['status'];
+        // Normalize status values (enum vs string) so comparisons are reliable
+        $oldStatusValue = $order->status instanceof OrderStatus ? $order->status->value : $order->status;
+        $newStatusValue = $validated['status'] instanceof OrderStatus
+            ? $validated['status']->value
+            : $validated['status'];
 
-            // If changing to Cancelled and order was not already cancelled, restore stock
-            if ($newStatus === OrderStatus::Cancelled->value && $oldStatus !== OrderStatus::Cancelled->value) {
-                DB::transaction(function () use ($order) {
-                    foreach ($order->items as $item) {
-                        if ($item->product) {
-                            $item->product->increment('stock_quantity', $item->quantity);
-                        }
+        $becomingCancelled = $oldStatusValue !== OrderStatus::Cancelled->value
+            && $newStatusValue === OrderStatus::Cancelled->value;
+
+        $leavingCancelled = $oldStatusValue === OrderStatus::Cancelled->value
+            && $newStatusValue !== OrderStatus::Cancelled->value;
+
+        DB::transaction(function () use ($order, $becomingCancelled, $leavingCancelled, $validated) {
+            // Restore stock when the order becomes cancelled
+            if ($becomingCancelled) {
+                foreach ($order->items as $item) {
+                    if ($item->product) {
+                        $item->product->increment('stock_quantity', $item->quantity);
                     }
-                });
+                }
             }
 
-            // If changing from Cancelled to another status, decrement stock again
-            if ($oldStatus === OrderStatus::Cancelled->value && $newStatus !== OrderStatus::Cancelled->value) {
-                DB::transaction(function () use ($order) {
-                    foreach ($order->items as $item) {
-                        if ($item->product && $item->quantity <= $item->product->stock_quantity) {
-                            $item->product->decrementStock($item->quantity);
-                        }
+            // Re-decrement stock when leaving cancelled (reactivation)
+            if ($leavingCancelled) {
+                $failures = [];
+                foreach ($order->items as $item) {
+                    if (! $item->product) {
+                        continue;
                     }
-                });
-            }
-        }
+                    if ($item->quantity > $item->product->stock_quantity) {
+                        $failures[] = "{$item->product->name} (need {$item->quantity}, have {$item->product->stock_quantity})";
+                    }
+                }
 
-        $order->update($validated);
+                if (! empty($failures)) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'status' => 'Cannot reactivate cancelled order — insufficient stock: ' . implode('; ', $failures),
+                    ]);
+                }
+
+                foreach ($order->items as $item) {
+                    if ($item->product) {
+                        $item->product->decrementStock($item->quantity);
+                    }
+                }
+            }
+
+            $order->update($validated);
+        });
 
         return redirect()->route($this->getIndexRoute())->with('success', 'Order updated!');
     }
@@ -338,12 +358,19 @@ class OrderController extends Controller
     public function destroy(Order $order)
     {
         DB::transaction(function () use ($order) {
-            // Restore stock for all items
-            foreach ($order->items as $item) {
-                if ($item->product) {
-                    $item->product->increment('stock_quantity', $item->quantity);
+            // Stock was already restored when the order was cancelled
+            // (in update() or cancel()). Do NOT restore it a second time.
+            $wasCancelled = $order->status === OrderStatus::Cancelled
+                || $order->status === OrderStatus::Cancelled->value;
+
+            if (! $wasCancelled) {
+                foreach ($order->items as $item) {
+                    if ($item->product) {
+                        $item->product->increment('stock_quantity', $item->quantity);
+                    }
                 }
             }
+
             $order->delete();
         });
 

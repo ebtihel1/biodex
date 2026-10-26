@@ -82,6 +82,22 @@
 .table tbody tr:hover { background-color: rgba(25, 135, 84, 0.05); }
 .table td { vertical-align: middle; text-align: center; padding: 0.9rem; }
 
+/* Ensure status & quantity columns stay visible and readable */
+.table { min-width: 1100px; }
+.table th, .table td { white-space: nowrap; }
+.table th:nth-child(4),
+.table td:nth-child(4),
+.table th:nth-child(7),
+.table td:nth-child(7) { min-width: 120px; }
+
+/* Solid, high-contrast status badges */
+.badge-status {
+    font-weight: 600;
+    font-size: 0.82rem;
+    padding: 0.45rem 0.75rem;
+    border-radius: 8px;
+}
+
 .table thead th a.sort-link {
     color: #198754;
     text-decoration: none;
@@ -336,8 +352,6 @@
                                 <th><a class="sort-link" href="{{ $sortLink('waste_id') }}">Waste {!! $sortIcon('waste_id') !!}</a></th>
                                 <th><a class="sort-link" href="{{ $sortLink('method') }}">Method {!! $sortIcon('method') !!}</a></th>
                                 <th><a class="sort-link" href="{{ $sortLink('status') }}">Status {!! $sortIcon('status') !!}</a></th>
-                                <th><a class="sort-link" href="{{ $sortLink('start_date') }}">Start Date {!! $sortIcon('start_date') !!}</a></th>
-                                <th><a class="sort-link" href="{{ $sortLink('end_date') }}">End Date {!! $sortIcon('end_date') !!}</a></th>
                                 <th><a class="sort-link" href="{{ $sortLink('output_quantity') }}">Qty (kg) {!! $sortIcon('output_quantity') !!}</a></th>
                                 <th><a class="sort-link" href="{{ $sortLink('responsible_user_id') }}">Responsible {!! $sortIcon('responsible_user_id') !!}</a></th>
                                 <th><i class="bi bi-gear"></i> Actions</th>
@@ -371,16 +385,11 @@
                                             $color = $statusColors[$process->status] ?? 'secondary';
                                             $label = $statusLabels[$process->status] ?? $process->status;
                                         @endphp
-                                        <span class="badge bg-{{ $color }} bg-opacity-15 text-{{ $color }} border border-{{ $color }} border-opacity-25">
+                                        <span class="badge badge-status bg-{{ $color }} text-white">
                                             {{ $label }}
                                         </span>
                                     </td>
-                                    <td>
-                                        <small class="text-muted">
-                                            <i class="bi bi-calendar me-1"></i>
-                                            {{ $process->start_date ? $process->start_date->format('d/m/Y') : 'N/A' }}
-                                        </small>
-                                    </td>
+                              
                                     <td>
                                         <small class="text-muted">
                                             <i class="bi bi-calendar-check me-1"></i>
@@ -388,8 +397,8 @@
                                         </small>
                                     </td>
                                     <td>
-                                        @if($process->output_quantity)
-                                            <span class="badge bg-info bg-opacity-15 text-info">
+                                        @if($process->output_quantity !== null && $process->output_quantity !== '')
+                                            <span class="badge badge-status bg-info text-dark">
                                                 {{ $process->output_quantity }} kg
                                             </span>
                                         @else

@@ -25,7 +25,7 @@
     <section class="page-hero">
         <div class="page-hero__text">
             <span class="page-hero__eyebrow"><i class="fas fa-pen-to-square"></i> Update order</span>
-            <h1 class="page-hero__title">Edit order #{{ $order->id }}</h1>
+            <h1 class="page-hero__title">Edit order {{ $order->id }}</h1>
             <p class="page-hero__subtitle">Adjust the product, quantity or delivery details.</p>
         </div>
         <span class="status-pill {{ $status['class'] }} on-hero">{{ $status['label'] }}</span>

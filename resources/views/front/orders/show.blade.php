@@ -104,10 +104,7 @@
                 </a>
                 @if(($statusKey === 'pending' || $statusKey === 'confirmed'))
                     <form action="{{ route('front.orders.cancel', $order) }}" method="POST" class="d-inline">
-                        @csrf
-                        <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-times me-1"></i>Cancel Order
-                        </button>
+                       
                     </form>
                 @endif
             </div>

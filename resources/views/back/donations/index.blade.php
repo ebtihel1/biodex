@@ -352,12 +352,14 @@
                                                 'available' => 'success',
                                                 'pending'   => 'warning',
                                                 'accepted'  => 'info',
+                                                'claimed'   => 'info',
                                                 'rejected'  => 'danger',
                                                 'completed' => 'primary',
                                             ];
                                             $color = $statusColors[$statusValue] ?? 'secondary';
+                                            $needsDarkText = in_array($color, ['warning', 'info', 'light'], true);
                                         @endphp
-                                        <span class="badge bg-{{ $color }} bg-opacity-15 text-{{ $color }} border border-{{ $color }} border-opacity-25">
+                                        <span class="badge bg-{{ $color }} {{ $needsDarkText ? 'text-dark' : '' }}">
                                             {{ ucfirst($statusValue) }}
                                         </span>
                                     </td>

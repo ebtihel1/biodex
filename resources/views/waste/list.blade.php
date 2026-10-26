@@ -152,6 +152,43 @@
 .action-delete { background: linear-gradient(135deg, #dc3545, #c82333); }
 .action-delete:hover { background: linear-gradient(135deg, #c82333, #a71e2a); }
 
+/* ===== Status Badges (texte visible) ===== */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.45rem 0.85rem;
+    border-radius: 50px;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+}
+
+/* Icônes DANS les badges : on force la couleur à hériter (pas blanc) */
+.status-badge i,
+.status-badge i::before {
+    color: inherit !important;
+    font-family: "bootstrap-icons" !important;
+    font-size: 0.9rem !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: inline-block !important;
+    line-height: 1 !important;
+}
+
+.status-recyclable {
+    background-color: #198754;
+    color: #ffffff !important;
+    border: 1px solid #146c43;
+}
+
+.status-reusable {
+    background-color: #0dcaf0;
+    color: #002b36 !important;
+    border: 1px solid #0aa2c0;
+}
+
 /* Header */
 .page-header {
     display: flex;
@@ -396,12 +433,12 @@
                                     <td>{{ $waste->user->name ?? 'Unknown user' }}</td>
                                     <td>
                                         @if($waste->status === 'recyclable')
-                                            <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-25">
-                                                <i class="bi bi-arrow-repeat me-1 small"></i> Recyclable
+                                            <span class="badge status-badge status-recyclable">
+                                                <i class="bi bi-arrow-repeat me-1" aria-hidden="true"></i> Recyclable
                                             </span>
                                         @else
-                                            <span class="badge bg-info bg-opacity-15 text-info border border-info border-opacity-25">
-                                                <i class="bi bi-arrow-counterclockwise me-1 small"></i> Reusable
+                                            <span class="badge status-badge status-reusable">
+                                                <i class="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i> Reusable
                                             </span>
                                         @endif
                                     </td>

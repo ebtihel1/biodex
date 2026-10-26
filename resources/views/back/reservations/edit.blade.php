@@ -6,7 +6,7 @@
         <div class="col-12 col-md-8">
             <div class="card shadow">
                 <div class="card-body p-3 p-md-4">
-                    <h1 class="h3 fw-bold mb-4 text-success text-center">Edit Reservation #{{ $reservation->id }}</h1>
+                    <h1 class="h3 fw-bold mb-4 text-success text-center">Edit Reservation {{ $reservation->id }}</h1>
                     @if ($errors->any())
                         <div class="alert alert-danger mb-4" role="alert">
                             <ul class="list-unstyled mb-0">

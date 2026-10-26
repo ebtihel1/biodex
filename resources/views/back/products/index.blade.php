@@ -355,7 +355,7 @@
                             <div class="d-flex gap-2">
                                 <a href="{{ route('products.show', $product->id) }}"
                                    class="btn btn-info btn-sm flex-fill text-white">
-                                    <i class="bi bi-eye me-1"></i> View
+                                    <i class="bi bi-eye me-1"></i> Show
                                 </a>
                                 <a href="{{ route('products.edit', $product->id) }}"
                                    class="btn btn-warning btn-sm flex-fill">

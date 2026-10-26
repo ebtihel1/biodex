@@ -156,6 +156,49 @@
 /* Le formulaire de suppression ne doit pas casser la mise en page */
 form.d-inline { display: inline-flex; margin: 0; padding: 0; }
 
+/* ===== Status Badges (texte visible) ===== */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.45rem 0.85rem;
+    border-radius: 50px;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+}
+
+/* Icônes DANS les badges : on force la couleur à hériter (pas blanc) */
+.status-badge i,
+.status-badge i::before {
+    color: inherit !important;
+    font-family: "bootstrap-icons" !important;
+    font-size: 0.9rem !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: inline-block !important;
+    line-height: 1 !important;
+}
+
+.status-active {
+    background-color: #198754;
+    color: #ffffff !important;
+    border: 1px solid #146c43;
+}
+
+.status-inactive {
+    background-color: #6c757d;
+    color: #ffffff !important;
+    border: 1px solid #565e64;
+}
+
+.status-undefined {
+    background-color: #ffc107;
+    color: #1b4332 !important;
+    border: 1px solid #e0a800;
+}
+
 /* ===== Page Header ===== */
 .page-header {
     display: flex; flex-wrap: wrap; justify-content: space-between;
@@ -413,16 +456,16 @@ form.d-inline { display: inline-flex; margin: 0; padding: 0; }
                                     <td>
                                         @php $status = $collectionPoint->status ?? 'undefined'; @endphp
                                         @if ($status === 'active')
-                                            <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-25 d-inline-flex align-items-center justify-content-center">
-                                                <i class="bi bi-check-circle me-1 small" aria-hidden="true"></i> Active
+                                            <span class="badge status-badge status-active">
+                                                <i class="bi bi-check-circle-fill me-1" aria-hidden="true"></i> Active
                                             </span>
                                         @elseif ($status === 'inactive')
-                                            <span class="badge bg-secondary bg-opacity-15 text-secondary border border-secondary border-opacity-25 d-inline-flex align-items-center justify-content-center">
-                                                <i class="bi bi-x-circle me-1 small" aria-hidden="true"></i> Inactive
+                                            <span class="badge status-badge status-inactive">
+                                                <i class="bi bi-x-circle-fill me-1" aria-hidden="true"></i> Inactive
                                             </span>
                                         @else
-                                            <span class="badge bg-warning bg-opacity-15 text-warning border border-warning border-opacity-25 d-inline-flex align-items-center justify-content-center">
-                                                <i class="bi bi-question-circle me-1 small" aria-hidden="true"></i> Undefined
+                                            <span class="badge status-badge status-undefined">
+                                                <i class="bi bi-question-circle-fill me-1" aria-hidden="true"></i> Undefined
                                             </span>
                                         @endif
                                     </td>

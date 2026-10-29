@@ -160,6 +160,13 @@ class OrderController extends Controller
                     ->with('error', 'Your cart is empty. Please add items before checkout.');
             }
 
+            // Get recommendations
+            $recommendations = [];
+            if (Auth::check()) {
+                $service = new RecommendationService();
+                $recommendations = $service->suggestForUser(Auth::user());
+            }
+
             $viewPrefix = $this->getViewPrefix();
             $storeRoute = $this->getStoreRoute();
             $indexRoute = $this->getIndexRoute();
@@ -167,7 +174,8 @@ class OrderController extends Controller
             return view($viewPrefix . 'orders.create', compact(
                 'cart',
                 'storeRoute',
-                'indexRoute'
+                'indexRoute',
+                'recommendations'
             ));
         } else {
             // For back, show product selection (admin creating orders)
@@ -275,11 +283,22 @@ class OrderController extends Controller
     public function edit(Order $order)
     {
         $order->load(['user', 'items.product']);
+
+        // Get recommendations for front route
+        $recommendations = [];
+        if ($this->isFrontRoute() && Auth::check()) {
+            $service = new RecommendationService();
+            $recommendations = $service->suggestForUser(Auth::user());
+        }
+
+        // Get products for product selection (front edit allows changing product)
+        $products = Product::available()->get(['id', 'name', 'price']);
+
         $viewPrefix = $this->getViewPrefix();
         $updateRoute = $this->getUpdateRoute($order);
         $showRoute = $this->getShowRoute($order);
         $indexRoute = $this->getIndexRoute();
-        return view($viewPrefix . 'orders.edit', compact('order', 'updateRoute', 'showRoute', 'indexRoute'));
+        return view($viewPrefix . 'orders.edit', compact('order', 'updateRoute', 'showRoute', 'indexRoute', 'recommendations', 'products'));
     }
 
     // ======================= UPDATE =======================

@@ -344,6 +344,79 @@
         background-image: none;
     }
 
+    /* ===== Recommendation Cards ===== */
+    .recommendation-card {
+        background: #fff;
+        border: 2px solid var(--bd-primary);
+        border-radius: 16px;
+        padding: 1.25rem;
+        position: relative;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+    }
+    .recommendation-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25);
+    }
+    .recommendation-card__badge {
+        position: absolute;
+        top: -10px;
+        right: 12px;
+        background: linear-gradient(135deg, var(--bd-primary), var(--bd-primary-dark));
+        color: #fff;
+        padding: 0.3rem 0.85rem;
+        border-radius: 25px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+    }
+    .recommendation-card__content {
+        padding-right: 2.5rem;
+    }
+    .recommendation-card__title {
+        font-weight: 700;
+        color: var(--bd-dark);
+        margin: 0 0 0.5rem 0;
+        font-size: 1.05rem;
+    }
+    .recommendation-card__price {
+        color: var(--bd-primary);
+        font-weight: 800;
+        font-size: 1.35rem;
+        margin: 0 0 0.3rem 0;
+    }
+    .recommendation-card__stock {
+        color: var(--bd-gray);
+        font-size: 0.875rem;
+        margin: 0;
+    }
+    .recommendation-card__stock i {
+        color: var(--bd-primary);
+        margin-right: 0.3rem;
+    }
+    .recommendation-card__btn {
+        display: inline-block;
+        margin-top: 0.85rem;
+        padding: 0.6rem 1.25rem;
+        background: linear-gradient(135deg, var(--bd-primary), var(--bd-primary-dark));
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .recommendation-card__btn:hover {
+        background: linear-gradient(135deg, var(--bd-primary-dark), var(--bd-primary-darker));
+        color: #fff;
+        transform: translateY(-2px);
+    }
+
     /* ===== Animations ===== */
     @keyframes bdFadeInUp {
         from { opacity: 0; transform: translateY(24px); }
@@ -481,6 +554,36 @@
                                 @enderror
                             </div>
 
+                            {{-- ============ AI RECOMMENDATIONS ============ --}}
+                            @if(isset($recommendations) && count($recommendations) > 0)
+                                <h3 class="form-section-title">
+                                    <span class="section-icon"><i class="fas fa-wand-magic-sparkles"></i></span>
+                                    Recommended for you
+                                </h3>
+                                <div class="row g-3 mb-4">
+                                    @foreach($recommendations as $rec)
+                                        <div class="col-12 col-md-6">
+                                            <div class="recommendation-card">
+                                                <div class="recommendation-card__badge">
+                                                    <i class="fas fa-star"></i> AI Suggestion
+                                                </div>
+                                                <div class="recommendation-card__content">
+                                                    <h6 class="recommendation-card__title">{{ $rec['name'] }}</h6>
+                                                    <p class="recommendation-card__price">{{ number_format($rec['price'], 2) }} DT</p>
+                                                    <p class="recommendation-card__stock">
+                                                        <i class="fas fa-box"></i> {{ $rec['stock'] }} in stock
+                                                    </p>
+                                                </div>
+                                                <button type="button" class="recommendation-card__btn"
+                                                        onclick="selectRecommendedProduct({{ $rec['id'] }}, '{{ $rec['name'] }}')">
+                                                    Select this product
+                                                </button>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+
                             {{-- ============ ACTIONS ============ --}}
                             <div class="form-actions">
                                 <a href="{{ route($indexRoute) }}" class="btn-modern btn-secondary">
@@ -531,6 +634,25 @@ document.addEventListener('DOMContentLoaded', function () {
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
         reservedUntil.min = now.toISOString().slice(0, 16);
     }
+
+    /* ============================================================
+       SELECT RECOMMENDED PRODUCT
+       ============================================================ */
+    window.selectRecommendedProduct = function(productId, productName) {
+        const productSelect = document.getElementById('product_id');
+        if (productSelect) {
+            productSelect.value = productId;
+            // Scroll to the product selection
+            productSelect.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Highlight the select
+            productSelect.style.borderColor = '#10b981';
+            productSelect.style.boxShadow = '0 0 0 4px rgba(16, 185, 129, 0.12)';
+            setTimeout(() => {
+                productSelect.style.borderColor = '';
+                productSelect.style.boxShadow = '';
+            }, 2000);
+        }
+    };
 });
 </script>
 @endsection

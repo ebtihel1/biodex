@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Product;
+use App\Services\RecommendationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -22,7 +23,14 @@ class CartController extends Controller
 
         $cart = Cart::with('items.product')->firstOrCreate(['user_id' => Auth::id()]);
 
-        return view('front.cart.index', compact('cart'));
+        // Get recommendations
+        $recommendations = [];
+        if (Auth::check()) {
+            $service = new RecommendationService();
+            $recommendations = $service->suggestForUser(Auth::user());
+        }
+
+        return view('front.cart.index', compact('cart', 'recommendations'));
     }
 
     /**

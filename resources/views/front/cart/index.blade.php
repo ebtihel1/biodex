@@ -129,6 +129,45 @@
                 </div>
             </div>
         </div>
+
+        <!-- AI Recommendations -->
+        @if(isset($recommendations) && count($recommendations) > 0)
+            <div class="row g-4 mt-4">
+                <div class="col-12">
+                    <div class="card recommendations-card">
+                        <div class="card-body">
+                            <h4 class="card-title mb-4">
+                                <i class="fas fa-wand-magic-sparkles me-2"></i>Recommended for you
+                            </h4>
+                            <div class="row g-3">
+                                @foreach($recommendations as $rec)
+                                    <div class="col-12 col-md-6 col-lg-3">
+                                        <div class="recommendation-card">
+                                            <div class="recommendation-card__badge">
+                                                <i class="fas fa-star"></i> AI Pick
+                                            </div>
+                                            <div class="recommendation-card__content">
+                                                <h6 class="recommendation-card__title">{{ $rec['name'] }}</h6>
+                                                <p class="recommendation-card__price">{{ number_format($rec['price'], 2) }} DT</p>
+                                                <p class="recommendation-card__stock">
+                                                    <i class="fas fa-box"></i> {{ $rec['stock'] }} in stock
+                                                </p>
+                                            </div>
+                                            <form action="{{ route('front.cart.add', $rec['id']) }}" method="POST">
+                                                @csrf
+                                                <button type="submit" class="recommendation-card__btn">
+                                                    <i class="fas fa-cart-plus me-1"></i> Add to Cart
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
     @endif
 </div>
 
@@ -294,6 +333,94 @@
     .empty-state p {
         color: var(--muted);
         margin-bottom: 1.5rem;
+    }
+
+    .recommendations-card {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: 0 10px 30px rgba(20, 35, 28, .06);
+    }
+
+    .recommendation-card {
+        background: #fff;
+        border: 2px solid var(--green-500);
+        border-radius: 12px;
+        padding: 1rem;
+        position: relative;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+        height: 100%;
+    }
+
+    .recommendation-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25);
+    }
+
+    .recommendation-card__badge {
+        position: absolute;
+        top: -10px;
+        right: 10px;
+        background: linear-gradient(135deg, var(--green-500), var(--green-600));
+        color: #fff;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+    }
+
+    .recommendation-card__content {
+        padding-right: 2rem;
+    }
+
+    .recommendation-card__title {
+        font-weight: 700;
+        color: var(--ink);
+        margin: 0 0 0.5rem 0;
+        font-size: 1rem;
+    }
+
+    .recommendation-card__price {
+        color: var(--green-700);
+        font-weight: 800;
+        font-size: 1.25rem;
+        margin: 0 0 0.25rem 0;
+    }
+
+    .recommendation-card__stock {
+        color: var(--muted);
+        font-size: 0.85rem;
+        margin: 0;
+    }
+
+    .recommendation-card__stock i {
+        color: var(--green-500);
+        margin-right: 0.25rem;
+    }
+
+    .recommendation-card__btn {
+        display: inline-block;
+        margin-top: 0.75rem;
+        padding: 0.5rem 1rem;
+        background: var(--green-700);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        width: 100%;
+    }
+
+    .recommendation-card__btn:hover {
+        background: var(--green-600);
+        color: #fff;
     }
 </style>
 @endsection
